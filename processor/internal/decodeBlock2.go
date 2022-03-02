@@ -30,7 +30,7 @@ func alu8BitAdd(v byte) {
 	setSFromA()
 	setZFromA()
 	resetN()
-	setUnusedFlags()
+	setUnusedFlagsFromA()
 }
 
 /* 8 bit ADC */
@@ -46,7 +46,7 @@ func alu8BitAdc(v byte) {
 	setSFromA()
 	setZFromA()
 	resetN()
-	setUnusedFlags()
+	setUnusedFlagsFromA()
 }
 
 /* 8 bit SUB */
@@ -58,7 +58,7 @@ func alu8BitSub(v byte) {
 	setSFromA()
 	setZFromA()
 	setN()
-	setUnusedFlags()
+	setUnusedFlagsFromA()
 }
 
 /* 8 bit SBC */
@@ -73,7 +73,7 @@ func alu8BitSbc(v byte) {
 	setSFromA()
 	setZFromA()
 	setN()
-	setUnusedFlags()
+	setUnusedFlagsFromA()
 }
 
 /* 8 bit AND  */
@@ -83,7 +83,7 @@ func alu8BitAnd(v byte) {
 	setSFromA()
 	setZFromA()
 	setPVFromA()
-	setUnusedFlags()
+	setUnusedFlagsFromA()
 }
 
 /* 8 bit OR  */
@@ -93,7 +93,7 @@ func alu8BitOr(v byte) {
 	setSFromA()
 	setZFromA()
 	setPVFromA()
-	setUnusedFlags()
+	setUnusedFlagsFromA()
 }
 
 /* 8 bit XOR  */
@@ -103,7 +103,7 @@ func alu8BitXor(v byte) {
 	setSFromA()
 	setZFromA()
 	setPVFromA()
-	setUnusedFlags()
+	setUnusedFlagsFromA()
 }
 
 /* 8 bit CP */
