@@ -37,6 +37,8 @@ const flag_N_N byte = flag_N ^ 0xFF
 const flag_C_N byte = flag_C ^ 0xFF
 
 var PARITY_TABLE [256]bool
+var setBitTable = [8]byte{0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80}
+var resetBitTable = [8]byte{0xFE, 0xFD, 0xFB, 0xF7, 0xEF, 0xDF, 0xBF, 0x7F}
 
 func init() {
 	PARITY_TABLE[0] = true // even PARITY_TABLE seed value
@@ -408,6 +410,14 @@ func setSBool(b bool) {
 	}
 }
 
+func setZBool(b bool) {
+	if b {
+		setZ()
+	} else {
+		resetZ()
+	}
+}
+
 func set3Bool(b bool) {
 	if b {
 		set3()
@@ -440,8 +450,12 @@ func getN() bool {
 
 // set unused flags (3 & 5) to bits in result
 // Z80 ALU weirdness
-func setUnusedFlags() {
-	v := reg.a & 0x28
+func setUnusedFlagsFromA() {
+	setUnusedFlagsFromV(reg.a)
+}
+
+func setUnusedFlagsFromV(v byte) {
+	v = v & 0x28
 	reg.f = reg.f & 0xD7
 	reg.f = reg.f | v
 }

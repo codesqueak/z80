@@ -136,7 +136,7 @@ func inc4(y byte) {
 	setSFromA()
 	setZFromA()
 	resetN()
-	setUnusedFlags()
+	setUnusedFlagsFromA()
 	store8r(v, y)
 }
 
@@ -149,7 +149,7 @@ func dec5(y byte) {
 	setSFromA()
 	setZFromA()
 	setN()
-	setUnusedFlags()
+	setUnusedFlagsFromA()
 	store8r(v, y)
 }
 
@@ -173,7 +173,7 @@ func accFlagOps7(y byte) {
 		}
 		resetH()
 		resetN()
-		setUnusedFlags()
+		setUnusedFlagsFromA()
 	case 1: // RRCA
 		carry := (reg.a & 0x01) != 0
 		reg.a = reg.a >> 1
@@ -185,7 +185,7 @@ func accFlagOps7(y byte) {
 		}
 		resetH()
 		resetN()
-		setUnusedFlags()
+		setUnusedFlagsFromA()
 	case 2: // RLA
 		carry := reg.a >= 0x80
 		reg.a = reg.a << 1
@@ -199,7 +199,7 @@ func accFlagOps7(y byte) {
 		}
 		resetH()
 		resetN()
-		setUnusedFlags()
+		setUnusedFlagsFromA()
 	case 3: // RRA
 		carry := (reg.a & 0x01) != 0
 		reg.a = reg.a >> 1
@@ -213,7 +213,7 @@ func accFlagOps7(y byte) {
 		}
 		resetH()
 		resetN()
-		setUnusedFlags()
+		setUnusedFlagsFromA()
 	case 4: // DAA is weird, can't find Zilog algorithm so using +0110 if Nibble>9 algorithm.
 		ans := reg.a
 		var incr byte = 0
@@ -242,12 +242,12 @@ func accFlagOps7(y byte) {
 		reg.a = reg.a ^ 0xFF
 		setH()
 		setN()
-		setUnusedFlags()
+		setUnusedFlagsFromA()
 	case 6: // SCF
 		setC()
 		resetH()
 		resetN()
-		setUnusedFlags()
+		setUnusedFlagsFromA()
 	default: // CCF
 		if getC() {
 			setH()
@@ -257,6 +257,6 @@ func accFlagOps7(y byte) {
 			setC()
 		}
 		resetN()
-		setUnusedFlags()
+		setUnusedFlagsFromA()
 	}
 }
