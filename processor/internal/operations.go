@@ -130,7 +130,7 @@ func store16ToRAM(addr uint16, v uint16) {
 	(*memory).Put(addr+1, msb)
 }
 
-// put 16 bit value onto teh stack
+// put 16 bit value onto the stack
 func push(v uint16) {
 	lsb := uint8(v & LSB)
 	msb := uint8(v >> 8)
