@@ -1,6 +1,6 @@
 package internal
 
-func decodeDD() {
+func decodeDDFD(dd byte) {
 	inst := (*memory).Get(reg.pc)
 	reg.pc++
 	_, _, z := basicDecode(inst)

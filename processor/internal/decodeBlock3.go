@@ -136,11 +136,11 @@ func various3_5(y byte) {
 			push(reg.pc)
 			reg.pc = addr
 		case 1:
-			decodeDD()
+			decodeDDFD(true)
 		case 2:
 			decodeED()
 		default:
-			decodeFD()
+			decodeDDFD(false)
 		}
 	}
 }

@@ -23,17 +23,17 @@ func variousED(y, z byte) {
 	case 1: // OUT (C), r[y] / OUT (C), 0
 		outC(y)
 	case 2: // SBC HL, rp[p] / ADC HL, rp[p]
-		return
-	case 3:
-		return
-	case 4:
-		return
-	case 5:
-		return
-	case 6:
-		return
-	default:
-		return
+		sbcadchl(y)
+	case 3: // 	LD (nn), rp[p] / LD rp[p], (nn)
+		ld16Indirect(y)
+	case 4: // NEG
+		neg()
+	case 5: // RETN / RETI
+		retIN(y)
+	case 6: // IM im[y]
+		im(y)
+	default: // LD / RRD / RLD
+		ldrrdrld(y)
 	}
 }
 
@@ -99,6 +99,129 @@ func sbcadchl(y byte) {
 	}
 }
 
+func ld16Indirect(y byte) {
+	p, q := getPQ(y)
+	if q == 0 { // LD (nn), rp[p]
+		addr := load16FromPC()
+		v := getRP(p)
+		store16ToRAM(addr, v)
+	} else { // LD rp[p], (nn)
+		addr := load16FromPC()
+		v := load16FromRAM(addr)
+		setRP(p, v)
+	}
+}
+
+func neg() {
+	v := reg.a
+	setHBool((v & 0x0f) == 0x00)
+	setPVBool(v == 0x80)
+	setCBool(v != 0)
+	v = 0 - v
+	reg.a = v
+	setZ()
+	setN()
+	setUnusedFlagsFromA()
+}
+
+func retIN(y byte) {
+	reg.pc = pop()
+	if y != 1 { // RETN
+		reg.iff1 = reg.iff2
+	}
+}
+
+func im(y byte) {
+	switch y {
+	case 0, 4:
+		reg.interruptMode = 0
+	case 1, 2, 5, 6:
+		reg.interruptMode = 1
+	case 3, 7:
+		reg.interruptMode = 2
+	}
+}
+
+func ldrrdrld(y byte) {
+	switch y {
+	case 0: // LD I, A
+		reg.i = reg.a
+	case 1: // LD R, A
+		reg.r = reg.a & 0x7F
+	case 2: // LD A, I
+		ldai()
+	case 3: // LD A, R
+		ldar()
+	case 4: // RRD
+		rrd()
+	case 5: // RLD
+		rld()
+	case 6: // NOP
+		return
+	default: // NOP
+		return
+	}
+}
+
+func ldai() {
+	reg.a = reg.i
+	setSFromA()
+	setZFromA()
+	resetH()
+	resetN()
+	setPVBool(reg.iff2)
+	setUnusedFlagsFromA()
+}
+
+func ldar() {
+	reg.a = reg.r & 0x7F
+	resetS()
+	setZFromA()
+	resetH()
+	resetN()
+	setPVBool(reg.iff2)
+	setUnusedFlagsFromA()
+}
+
+func rrd() {
+	temp := (*memory).Get(getHL())
+	nibble1 := (reg.a & 0x00F0) >> 4
+	nibble2 := reg.a & 0x000F
+	nibble3 := (temp & 0x00F0) >> 4
+	nibble4 := temp & 0x000F
+	//
+	reg.a = (nibble1 << 4) | nibble4
+	temp = (nibble2 << 4) | nibble3
+	(*memory).Put(getHL(), temp)
+	//
+	setSFromA()
+	setZFromA()
+	resetH()
+	setPVFromA()
+	resetN()
+	setUnusedFlagsFromA()
+}
+
+func rld() {
+	temp := (*memory).Get(getHL())
+	nibble1 := (reg.a & 0x00F0) >> 4
+	nibble2 := reg.a & 0x000F
+	nibble3 := (temp & 0x00F0) >> 4
+	nibble4 := temp & 0x000F
+	//
+	reg.a = (nibble1 << 4) | nibble3
+	temp = (nibble4 << 4) | nibble2
+	//
+	(*memory).Put(getHL(), temp)
+	//
+	setSFromA()
+	setZFromA()
+	resetH()
+	setPVFromA()
+	resetN()
+	setUnusedFlagsFromA()
+}
+
 /* 2's compliment overflow flag control */
 func setOverflowFlagSub16(rr, nn uint16, cc uint32) {
 	left := int32(int16(rr))
@@ -115,8 +238,4 @@ func setOverflowFlagAdd16(rr, nn uint16, cc uint32) {
 	carry := int32(cc)
 	r := left + right + carry
 	setPVBool((r < -32768) || (r > 32767))
-}
-
-func block(y, z byte) {
-
 }
