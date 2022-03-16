@@ -124,7 +124,6 @@ func incDec163(y byte) {
 		// dec 16
 		setRP(p, v-1)
 	}
-
 }
 
 // INC r[y]
@@ -133,11 +132,11 @@ func inc4(y byte) {
 	setHalfCarryFlagAddValue(v, 1)
 	setPVBool(v == 0x7F)
 	v++
-	setSFromA()
-	setZFromA()
-	resetN()
-	setUnusedFlagsFromA()
 	store8r(v, y)
+	setSFromV(v)
+	setZFromV(v)
+	resetN()
+	setUnusedFlagsFromV(v)
 }
 
 // DEC r[y]
@@ -146,11 +145,11 @@ func dec5(y byte) {
 	setHalfCarryFlagSubValue(v, 1)
 	setPVBool(v == 0x80)
 	v = v - 1
-	setSFromA()
-	setZFromA()
-	setN()
-	setUnusedFlagsFromA()
 	store8r(v, y)
+	setSFromV(v)
+	setZFromV(v)
+	setN()
+	setUnusedFlagsFromV(v)
 }
 
 // LD r[y], n

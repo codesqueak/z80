@@ -2,6 +2,7 @@ package internal
 
 func decodeED() {
 	inst := (*memory).Get(reg.pc)
+	//	fmt.Printf("inst ED : %x\n", inst)
 	reg.pc++
 	x, y, z := basicDecode(inst)
 	switch x {
@@ -10,7 +11,7 @@ func decodeED() {
 	case 1:
 		variousED(y, z)
 	case 2:
-		return
+		block(y, z)
 	default: // NONI
 		return
 	}
@@ -147,7 +148,7 @@ func ldrrdrld(y byte) {
 	case 0: // LD I, A
 		reg.i = reg.a
 	case 1: // LD R, A
-		reg.r = reg.a & 0x7F
+		reg.r = reg.a
 	case 2: // LD A, I
 		ldai()
 	case 3: // LD A, R
@@ -222,20 +223,222 @@ func rld() {
 	setUnusedFlagsFromA()
 }
 
-/* 2's compliment overflow flag control */
-func setOverflowFlagSub16(rr, nn uint16, cc uint32) {
-	left := int32(int16(rr))
-	right := int32(int16(nn))
-	carry := int32(cc)
-	r := left - right - carry
-	setPVBool((r < -32768) || (r > 32767))
+// block moves
+func block(y, z byte) {
+	if (z <= 3) && (y >= 4) {
+		switch z {
+		case 0:
+			blockLD(y)
+		case 1:
+			blockCP(y)
+		case 2:
+			blockIN(y)
+		default:
+			blockOUT(y)
+		}
+	} else {
+		return // NOP
+	}
 }
 
-/* 2's compliment overflow flag control */
-func setOverflowFlagAdd16(rr, nn uint16, cc uint32) {
-	left := int32(int16(rr))
-	right := int32(int16(nn))
-	carry := int32(cc)
-	r := left + right + carry
-	setPVBool((r < -32768) || (r > 32767))
+func blockLD(y byte) {
+	switch y {
+	case 4:
+		LDI()
+	case 5:
+		LDD()
+	case 6:
+		LDIR()
+	default:
+		LDDR()
+	}
+}
+
+func LDI() {
+	v := (*memory).Get(getHL())
+	(*memory).Put(getDE(), v)
+	setDE(getDE() + 1)
+	setHL(getHL() + 1)
+	setBC(getBC() - 1)
+	resetH()
+	resetN()
+	setPVBool(getBC() != 0)
+	temp := v + reg.a
+	set3Bool((temp & 0x08) != 0)
+	set5Bool((temp & 0x02) != 0)
+}
+
+func LDIR() {
+	LDI()
+	if getBC() != 0 {
+		reg.pc = reg.pc - 2
+	}
+}
+
+func LDD() {
+	v := (*memory).Get(getHL())
+	(*memory).Put(getDE(), v)
+	setDE(getDE() - 1)
+	setHL(getHL() - 1)
+	setBC(getBC() - 1)
+	resetH()
+	resetN()
+	setPVBool(getBC() != 0)
+	temp := v + reg.a
+	set3Bool((temp & 0x08) != 0)
+	set5Bool((temp & 0x02) != 0)
+}
+
+func LDDR() {
+	LDD()
+	if getBC() != 0 {
+		reg.pc = reg.pc - 2
+	}
+}
+
+func blockCP(y byte) {
+	switch y {
+	case 4:
+		CPI()
+	case 5:
+		CPD()
+	case 6:
+		CPIR()
+	default:
+		CPDR()
+	}
+}
+
+func CPI() {
+	v := (*memory).Get(getHL())
+	result := reg.a - v
+	setHL(getHL() + 1)
+	setBC(getBC() - 1)
+	setSBool((result & 0x80) != 0)
+	setZBool(result == 0)
+	setHalfCarryFlagSubValue(reg.a, v)
+	setPVBool(getBC() != 0)
+	setN()
+	if getH() {
+		result--
+	}
+	set3Bool((result & 0x08) != 0)
+	set5Bool((result & 0x02) != 0)
+}
+
+func CPIR() {
+	CPI()
+	if !getZ() && (getBC() != 0) {
+		reg.pc = reg.pc - 2
+	}
+}
+
+func CPD() {
+	v := (*memory).Get(getHL())
+	result := reg.a - v
+	setHL(getHL() - 1)
+	setBC(getBC() - 1)
+	setSBool((result & 0x80) != 0)
+	setZBool(result == 0)
+	setHalfCarryFlagSubValue(reg.a, v)
+	setPVBool(getBC() != 0)
+	setN()
+	if getH() {
+		result--
+	}
+	set3Bool((result & 0x08) != 0)
+	set5Bool((result & 0x02) != 0)
+}
+
+func CPDR() {
+	CPD()
+	if !getZ() && (getBC() != 0) {
+		reg.pc = reg.pc - 2
+	}
+}
+
+func blockIN(y byte) {
+	switch y {
+	case 4:
+		INI()
+	case 5:
+		IND()
+	case 6:
+		INIR()
+	default:
+		INDR()
+	}
+}
+
+func INI() {
+	(*memory).Put(getHL(), (*io).Get(reg.c))
+	reg.b--
+	setHL(getHL() + 1)
+	setZBool(reg.b == 0)
+	setN()
+}
+
+func INIR() {
+	INI()
+	if !getZ() {
+		reg.pc = reg.pc - 2
+	}
+}
+
+func IND() {
+	(*memory).Put(getHL(), (*io).Get(reg.c))
+	reg.b--
+	setHL(getHL() - 1)
+	setZBool(reg.b == 0)
+	setN()
+}
+
+func INDR() {
+	IND()
+	if !getZ() {
+		reg.pc = reg.pc - 2
+	}
+}
+
+func blockOUT(y byte) {
+	switch y {
+	case 4: // OUTI
+		OUTI()
+	case 5: // OUTD
+		OUTD()
+	case 6: // OTIR
+		OTIR()
+	default: // OTDR
+		OTDR()
+	}
+}
+
+func OUTI() {
+	(*io).Put((*memory).Get(getHL()), reg.c)
+	reg.b--
+	setHL(getHL() + 1)
+	setZBool(reg.b == 0)
+	setN()
+}
+
+func OTIR() {
+	OUTI()
+	if !getZ() {
+		reg.pc = reg.pc - 2
+	}
+}
+
+func OUTD() {
+	(*io).Put((*memory).Get(getHL()), reg.c)
+	reg.b--
+	setHL(getHL() - 1)
+	setZBool(reg.b == 0)
+	setN()
+}
+
+func OTDR() {
+	OUTD()
+	if !getZ() {
+		reg.pc = reg.pc - 2
+	}
 }

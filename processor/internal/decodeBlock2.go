@@ -25,7 +25,7 @@ func decodeX2(y, z byte) {
 func alu8BitAdd(v byte) {
 	setHalfCarryFlagAdd(v)
 	setOverflowFlagAdd(v, false)
-	setCBool(uint16(reg.a)+uint16(v) > 0x00FF)
+	setCBool((uint16(reg.a) + uint16(v)) > 0x00FF)
 	reg.a = reg.a + v
 	setSFromA()
 	setZFromA()
@@ -70,6 +70,7 @@ func alu8BitSbc(v byte) {
 	setHalfCarryFlagSubCarry(reg.a, v, c)
 	setOverflowFlagSub(v, c == 1)
 	setCBool(v+c > reg.a)
+	reg.a = reg.a - v - c
 	setSFromA()
 	setZFromA()
 	setN()
@@ -108,14 +109,13 @@ func alu8BitXor(v byte) {
 
 /* 8 bit CP */
 func alu8BitCp(v byte) {
-	a := reg.a
-	reg.a = a - v
 	reg.f = flag_N
-	setCBool(v > a)
-	setSFromA()
+	setHBool((reg.a & 0x0F) < (v & 0x0f))
+	setCBool(v > reg.a)
+	r := reg.a - v
+	setSBool((r & flag_S) != 0)
 	set3Bool((v & flag_3) != 0)
 	set5Bool((v & flag_5) != 0)
-	setZFromA()
-	setHBool((((a & 0x0f) - (v & 0x0f)) & flag_H) != 0)
-	setPVBool(((a ^ v) & (a ^ reg.a) & 0x80) != 0)
+	setZBool(r == 0)
+	setOverflowFlagSub(v, false)
 }

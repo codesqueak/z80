@@ -17,3 +17,7 @@ func RunOne() (bool, error) {
 func SetStartAddress(addr uint16) {
 	internal.SetStartAddress(addr)
 }
+
+func GetPC() uint16 {
+	return internal.GetPC()
+}

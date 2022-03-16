@@ -82,21 +82,21 @@ func relativeJump() {
 // condition evaluation on flag register
 func cc(y byte) bool {
 	switch y {
-	case 0x0:
+	case 0x0: // NZ
 		return 0 == (reg.f & flagZ)
-	case 0x1:
+	case 0x1: // Z
 		return 0 != (reg.f & flagZ)
-	case 0x2:
+	case 0x2: // NC
 		return 0 == (reg.f & flagC)
-	case 0x3:
+	case 0x3: // C
 		return 0 != (reg.f & flagC)
-	case 0x4:
+	case 0x4: // PO
 		return 0 == (reg.f & flagPV)
-	case 0x5:
+	case 0x5: // PE
 		return 0 != (reg.f & flagPV)
-	case 0x6:
+	case 0x6: // P
 		return 0 == (reg.f & flagN)
-	default:
+	default: // M
 		return 0 != (reg.f & flagN)
 	}
 }
@@ -144,6 +144,14 @@ func getHL() uint16 {
 	return uint16(reg.h)<<8 + uint16(reg.l)
 }
 
+func getIXIY() uint16 {
+	if reg.ddMode {
+		return reg.ix
+	} else {
+		return reg.iy
+	}
+}
+
 func getDE() uint16 {
 	return uint16(reg.d)<<8 + uint16(reg.e)
 }
@@ -157,14 +165,22 @@ func setHL(hl uint16) {
 	reg.l = byte(hl & LSB)
 }
 
+func setIXIY(ixiy uint16) {
+	if reg.ddMode {
+		reg.ix = ixiy
+	} else {
+		reg.iy = ixiy
+	}
+}
+
 func setDE(de uint16) {
 	reg.d = byte(de >> 8)
 	reg.e = byte(de & LSB)
 }
 
 func setBC(bc uint16) {
-	reg.d = byte(bc >> 8)
-	reg.e = byte(bc & LSB)
+	reg.b = byte(bc >> 8)
+	reg.c = byte(bc & LSB)
 }
 
 func setAF(af uint16) {
@@ -190,6 +206,27 @@ func setRP(p byte, v uint16) {
 	}
 }
 
+func setRPIXIY(p byte, v uint16) {
+	lsb := byte(v & LSB)
+	msb := byte(v >> 8)
+	switch p {
+	case 0:
+		reg.b = msb
+		reg.c = lsb
+	case 1:
+		reg.d = msb
+		reg.e = lsb
+	case 2:
+		if reg.ddMode {
+			reg.ix = v
+		} else {
+			reg.iy = v
+		}
+	default:
+		reg.sp = v
+	}
+}
+
 func getRP(p byte) uint16 {
 	switch p {
 	case 0:
@@ -198,6 +235,23 @@ func getRP(p byte) uint16 {
 		return uint16(reg.d)<<8 + uint16(reg.e)
 	case 2:
 		return uint16(reg.h)<<8 + uint16(reg.l)
+	default:
+		return reg.sp
+	}
+}
+
+func getRPIXIY(p byte) uint16 {
+	switch p {
+	case 0:
+		return uint16(reg.b)<<8 + uint16(reg.c)
+	case 1:
+		return uint16(reg.d)<<8 + uint16(reg.e)
+	case 2:
+		if reg.ddMode {
+			return reg.ix
+		} else {
+			return reg.iy
+		}
 	default:
 		return reg.sp
 	}
@@ -222,6 +276,28 @@ func setRP2(p byte, v uint16) {
 	}
 }
 
+func setRP2IXIY(p byte, v uint16) {
+	lsb := byte(v & LSB)
+	msb := byte(v >> 8)
+	switch p {
+	case 0:
+		reg.b = msb
+		reg.c = lsb
+	case 1:
+		reg.d = msb
+		reg.e = lsb
+	case 2:
+		if reg.ddMode {
+			reg.ix = v
+		} else {
+			reg.iy = v
+		}
+	default:
+		reg.a = msb
+		reg.f = lsb
+	}
+}
+
 func getRP2(p byte) uint16 {
 	switch p {
 	case 0:
@@ -235,8 +311,35 @@ func getRP2(p byte) uint16 {
 	}
 }
 
-func make16(lsb, msb byte) uint16 {
+func getRP2IXIY(p byte) uint16 {
+	switch p {
+	case 0:
+		return uint16(reg.b)<<8 + uint16(reg.c)
+	case 1:
+		return uint16(reg.d)<<8 + uint16(reg.e)
+	case 2:
+		if reg.ddMode {
+			return reg.ix
+		} else {
+			return reg.iy
+		}
+	default:
+		return uint16(reg.a)<<8 + uint16(reg.f)
+	}
+}
+
+func make16(msb, lsb byte) uint16 {
 	return (uint16(msb) << 8) + uint16(lsb)
+}
+
+// get the +dd part of an index address
+func getIndex() uint16 {
+	dd := uint16((*memory).Get(reg.pc))
+	if dd > 0x7F {
+		dd = dd | 0xFF00
+	}
+	reg.pc++
+	return dd
 }
 
 // 8 bit load
@@ -247,7 +350,7 @@ func load8r(y byte) byte {
 	case 1:
 		return reg.c
 	case 2:
-		return reg.e
+		return reg.d
 	case 3:
 		return reg.e
 	case 4:
@@ -258,7 +361,42 @@ func load8r(y byte) byte {
 		return (*memory).Get(make16(reg.h, reg.l))
 	default:
 		return reg.a
+	}
+}
 
+// 8 bit load
+func load8rIXIY(y byte) byte {
+	switch y {
+	case 0:
+		return reg.b
+	case 1:
+		return reg.c
+	case 2:
+		return reg.d
+	case 3:
+		return reg.e
+	case 4:
+		if reg.ddMode {
+			return byte((reg.ix & 0xFF) >> 8)
+		} else {
+			return byte((reg.iy & 0xFF) >> 8)
+		}
+	case 5:
+		if reg.ddMode {
+			return byte(reg.ix)
+		} else {
+			return byte(reg.iy)
+		}
+	case 6:
+		addr := getIndex()
+		if reg.ddMode {
+			addr = addr + reg.ix
+		} else {
+			addr = addr + reg.iy
+		}
+		return (*memory).Get(addr)
+	default:
+		return reg.a
 	}
 }
 
@@ -279,6 +417,42 @@ func store8r(v byte, y byte) {
 		reg.l = v
 	case 6:
 		(*memory).Put(make16(reg.h, reg.l), v)
+	case 7:
+		reg.a = v
+	}
+}
+
+// 8 bit store
+func store8rIXIY(v byte, y byte) {
+	switch y {
+	case 0:
+		reg.b = v
+	case 1:
+		reg.c = v
+	case 2:
+		reg.d = v
+	case 3:
+		reg.e = v
+	case 4:
+		if reg.ddMode {
+			reg.ix = (reg.ix & 0x00FF) | (uint16(v) << 8)
+		} else {
+			reg.iy = (reg.ix & 0x00FF) | (uint16(v) << 8)
+		}
+	case 5:
+		if reg.ddMode {
+			reg.ix = (reg.ix & 0xFF00) | uint16(v)
+		} else {
+			reg.iy = (reg.ix & 0xFF00) | uint16(v)
+		}
+	case 6:
+		addr := getIndex()
+		if reg.ddMode {
+			addr = addr + reg.ix
+		} else {
+			addr = addr + reg.iy
+		}
+		(*memory).Put(addr, v)
 	case 7:
 		reg.a = v
 	}
@@ -364,9 +538,9 @@ func setPVFromV(v byte) {
 
 func setPVBool(b bool) {
 	if b {
-		setH()
+		setPV()
 	} else {
-		resetH()
+		resetPV()
 	}
 }
 
@@ -378,20 +552,28 @@ func setHBool(b bool) {
 	}
 }
 
-func setSFromA() {
-	if reg.a >= 0x80 {
+func setSFromV(v byte) {
+	if v >= 0x80 {
 		setS()
 	} else {
 		resetS()
 	}
 }
 
-func setZFromA() {
-	if reg.a == 0 {
+func setSFromA() {
+	setSFromV(reg.a)
+}
+
+func setZFromV(v byte) {
+	if v == 0 {
 		setZ()
 	} else {
 		resetZ()
 	}
+}
+
+func setZFromA() {
+	setZFromV(reg.a)
 }
 
 func setCBool(b bool) {
@@ -438,6 +620,10 @@ func set5Bool(b bool) {
 
 func getC() bool {
 	return (reg.f & flagC) != 0
+}
+
+func getZ() bool {
+	return (reg.f & flagZ) != 0
 }
 
 func getH() bool {
@@ -546,4 +732,22 @@ func setOverflowFlagSub(rv byte, c bool) {
 		left--
 	}
 	setPVBool((left < -128) || (left > 127))
+}
+
+/* 2's compliment overflow flag control */
+func setOverflowFlagSub16(rr, nn uint16, cc uint32) {
+	left := int32(int16(rr))
+	right := int32(int16(nn))
+	carry := int32(cc)
+	r := left - right - carry
+	setPVBool((r < -32768) || (r > 32767))
+}
+
+/* 2's compliment overflow flag control */
+func setOverflowFlagAdd16(rr, nn uint16, cc uint32) {
+	left := int32(int16(rr))
+	right := int32(int16(nn))
+	carry := int32(cc)
+	r := left + right + carry
+	setPVBool((r < -32768) || (r > 32767))
 }

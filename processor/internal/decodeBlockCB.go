@@ -136,13 +136,19 @@ func setShiftFlags(v byte) {
 
 func bit(y, z byte) {
 	v := load8r(z)
-	resetS()
-	set3Bool((v & flag_3) != 0)
-	set5Bool((v & flag_5) != 0)
-	v = v & setBitTable[y]
+	v = bitGeneric(v, y)
 	store8r(v, z)
-	setZ()
-	setPV()
+}
+
+func bitGeneric(v, y byte) byte {
+	resetS()
+	v = v & setBitTable[y]
+	setZBool(v == 0)
+	setPVBool(v == 0)
 	resetN()
 	setH()
+	if y == 7 {
+		setSBool(v != 0)
+	}
+	return v
 }
