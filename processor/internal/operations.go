@@ -105,7 +105,7 @@ func cc(y byte) bool {
 func load16FromRAM(addr uint16) uint16 {
 	lsb := uint16((*memory).Get(addr))
 	msb := uint16((*memory).Get(addr + 1))
-	return (msb << 8) + lsb
+	return (msb << 8) | lsb
 }
 
 // load 16 bit from PC address
@@ -141,7 +141,7 @@ func push(v uint16) {
 }
 
 func getHL() uint16 {
-	return uint16(reg.h)<<8 + uint16(reg.l)
+	return uint16(reg.h)<<8 | uint16(reg.l)
 }
 
 func getIXIY() uint16 {
@@ -338,7 +338,6 @@ func getIndex() uint16 {
 	if dd > 0x7F {
 		dd = dd | 0xFF00
 	}
-	reg.pc++
 	return dd
 }
 
@@ -365,38 +364,33 @@ func load8r(y byte) byte {
 }
 
 // 8 bit load
-func load8rIXIY(y byte) byte {
+func load8rIXIY(y byte) (byte, bool) {
 	switch y {
 	case 0:
-		return reg.b
+		return reg.b, false
 	case 1:
-		return reg.c
+		return reg.c, false
 	case 2:
-		return reg.d
+		return reg.d, false
 	case 3:
-		return reg.e
+		return reg.e, false
 	case 4:
 		if reg.ddMode {
-			return byte((reg.ix & 0xFF) >> 8)
+			return byte((reg.ix & 0xFF00) >> 8), false
 		} else {
-			return byte((reg.iy & 0xFF) >> 8)
+			return byte((reg.iy & 0xFF00) >> 8), false
 		}
 	case 5:
 		if reg.ddMode {
-			return byte(reg.ix)
+			return byte(reg.ix), false
 		} else {
-			return byte(reg.iy)
+			return byte(reg.iy), false
 		}
 	case 6:
-		addr := getIndex()
-		if reg.ddMode {
-			addr = addr + reg.ix
-		} else {
-			addr = addr + reg.iy
-		}
-		return (*memory).Get(addr)
+		addr := indexedAddr()
+		return (*memory).Get(addr), true
 	default:
-		return reg.a
+		return reg.a, false
 	}
 }
 
@@ -423,7 +417,7 @@ func store8r(v byte, y byte) {
 }
 
 // 8 bit store
-func store8rIXIY(v byte, y byte) {
+func store8rIXIY(v byte, y byte) bool {
 	switch y {
 	case 0:
 		reg.b = v
@@ -437,25 +431,22 @@ func store8rIXIY(v byte, y byte) {
 		if reg.ddMode {
 			reg.ix = (reg.ix & 0x00FF) | (uint16(v) << 8)
 		} else {
-			reg.iy = (reg.ix & 0x00FF) | (uint16(v) << 8)
+			reg.iy = (reg.iy & 0x00FF) | (uint16(v) << 8)
 		}
 	case 5:
 		if reg.ddMode {
 			reg.ix = (reg.ix & 0xFF00) | uint16(v)
 		} else {
-			reg.iy = (reg.ix & 0xFF00) | uint16(v)
+			reg.iy = (reg.iy & 0xFF00) | uint16(v)
 		}
 	case 6:
-		addr := getIndex()
-		if reg.ddMode {
-			addr = addr + reg.ix
-		} else {
-			addr = addr + reg.iy
-		}
+		addr := indexedAddr()
 		(*memory).Put(addr, v)
+		return true
 	case 7:
 		reg.a = v
 	}
+	return false
 }
 
 // flag manipulation
@@ -650,11 +641,7 @@ func setUnusedFlagsFromV(v byte) {
 func setHalfCarryFlagAddCarry(right, carry byte) {
 	left := reg.a & 0x0f
 	right = right & 0x0f
-	if (right + left + carry) > 0x0f {
-		setH()
-	} else {
-		resetH()
-	}
+	setHBool((right + left + carry) > 0x0f)
 }
 
 /* half carry flag control */
@@ -666,11 +653,7 @@ func setHalfCarryFlagAdd(right byte) {
 func setHalfCarryFlagAddValue(left, right byte) {
 	left = left & 0x0F
 	right = right & 0x0F
-	if (right + left) > 0x0f {
-		setH()
-	} else {
-		resetH()
-	}
+	setHBool((right + left) > 0x0f)
 }
 
 func setHalfCarryFlagSub(right byte) {
@@ -680,22 +663,14 @@ func setHalfCarryFlagSub(right byte) {
 func setHalfCarryFlagSubValue(left, right byte) {
 	left = left & 0x0F
 	right = right & 0x0F
-	if left < right {
-		setH()
-	} else {
-		resetH()
-	}
+	setHBool(left < right)
 }
 
 /* half carry flag control */
 func setHalfCarryFlagSubCarry(left, right, carry byte) {
 	left = left & 0x0F
 	right = right & 0x0F
-	if left < (right + carry) {
-		setH()
-	} else {
-		resetH()
-	}
+	setHBool(left < (right + carry))
 }
 
 /* 2's compliment overflow flag control */
@@ -739,6 +714,12 @@ func setOverflowFlagSub16(rr, nn uint16, cc uint32) {
 	left := int32(int16(rr))
 	right := int32(int16(nn))
 	carry := int32(cc)
+	if left > 32767 {
+		left = left - 65536
+	}
+	if right > 32767 {
+		right = right - 65536
+	}
 	r := left - right - carry
 	setPVBool((r < -32768) || (r > 32767))
 }
@@ -747,6 +728,12 @@ func setOverflowFlagSub16(rr, nn uint16, cc uint32) {
 func setOverflowFlagAdd16(rr, nn uint16, cc uint32) {
 	left := int32(int16(rr))
 	right := int32(int16(nn))
+	if left > 32767 {
+		left = left - 65536
+	}
+	if right > 32767 {
+		right = right - 65536
+	}
 	carry := int32(cc)
 	r := left + right + carry
 	setPVBool((r < -32768) || (r > 32767))

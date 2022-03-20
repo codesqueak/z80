@@ -63,26 +63,10 @@ func loadAdd16Immediate1(y byte) {
 		//
 		resetN()
 		temp := (hl & 0x0FFF) + (right & 0x0FFF) // upper 8 half carry
-		if (temp & 0xF000) != 0 {
-			setH()
-		} else {
-			resetH()
-		}
-		if (result & 0x0800) != 0 {
-			set3()
-		} else {
-			reset3()
-		}
-		if (result & 0x2000) != 0 {
-			set5()
-		} else {
-			reset5()
-		}
-		if result < hl { // overflow ?
-			setC()
-		} else {
-			resetC()
-		}
+		setHBool(temp&0xF000 != 0)
+		set3Bool((result & 0x0800) != 0)
+		set5Bool((result & 0x2000) != 0)
+		setCBool(uint32(hl)+uint32(right) > 0xFFFF)
 		setHL(result)
 	}
 }

@@ -38,11 +38,21 @@ func rotate(y, z byte) {
 	}
 }
 
+func setShiftFlags(v byte) {
+	resetH()
+	resetN()
+	setPVFromV(v)
+	setUnusedFlagsFromV(v)
+}
+
 func rlc(v byte) byte {
-	setCBool(v >= 0x80)
+	setCBool((v & 0x80) != 0)
 	v = v << 1
-	setSBool(v >= 0x80)
-	setZBool(v == 0)
+	if getC() {
+		v = v | 0x01
+	}
+	setSFromV(v)
+	setZFromV(v)
 	setShiftFlags(v)
 	return v
 }
@@ -53,21 +63,21 @@ func rrc(v byte) byte {
 	if getC() {
 		v = v | 0x80
 	}
-	setSBool(v >= 0x80)
+	setSFromV(v)
 	setZBool(v == 0)
 	setShiftFlags(v)
 	return v
 }
 
 func rl(v byte) byte {
-	c := (v >= 0x80)
+	c := (v & 0x80) != 0
 	v = v << 1
 	if getC() {
 		v = v | 0x01
 	}
 	setCBool(c)
-	setSBool(v >= 0x80)
-	setZBool(v == 0)
+	setSFromV(v)
+	setZFromV(v)
 	setShiftFlags(v)
 	return v
 }
@@ -79,76 +89,68 @@ func rr(v byte) byte {
 	if c {
 		v = v | 0x80
 	}
-	setSBool(v >= 0x80)
-	setZBool(v == 0)
+	setSFromV(v)
+	setZFromV(v)
 	setShiftFlags(v)
 	return v
 }
 
 func sla(v byte) byte {
-	setCBool((v & 0x01) != 0)
+	setCBool((v & 0x80) != 0)
 	v = v << 1
-	resetC()
-	setSBool(v >= 0x80)
-	setZBool(v == 0)
+	setSFromV(v)
+	setZFromV(v)
 	setShiftFlags(v)
 	return v
 }
 
 func sra(v byte) byte {
-	setCBool((v & 0x0001) != 0)
+	setCBool((v & 0x01) != 0)
 	if (v & 0x80) == 0 {
 		v = v >> 1
 		resetS()
 	} else {
-		v = (v >> 1) | 0x0080
+		v = (v >> 1) | 0x80
 		setS()
 	}
-	setZBool(v == 0)
+	setZFromV(v)
 	setShiftFlags(v)
 	return v
 }
 
 func sll(v byte) byte {
-	setCBool(v >= 0x80)
+	setCBool((v & 0x80) != 0)
 	v = (v << 1) | 0x01 // bug in the silicon
 	resetZ()            // can never be zero
-	setSBool(v >= 0x80)
+	setSFromV(v)
 	setShiftFlags(v)
 	return v
 }
 
 func srl(v byte) byte {
-	setCBool((v & 0x0001) != 0)
+	setCBool((v & 0x01) != 0)
 	v = v >> 1
 	resetS()
-	setZBool(v == 0)
+	setZFromV(v)
 	setShiftFlags(v)
 	return v
 }
 
-func setShiftFlags(v byte) {
-	resetH()
-	resetN()
-	setPVFromV(v)
-	setUnusedFlagsFromV(v)
-}
-
 func bit(y, z byte) {
 	v := load8r(z)
-	v = bitGeneric(v, y)
-	store8r(v, z)
+	setUnusedFlagsFromV(v)
+	bitGeneric(v, y)
 }
 
-func bitGeneric(v, y byte) byte {
-	resetS()
+func bitGeneric(v, y byte) {
 	v = v & setBitTable[y]
+	if y == 7 {
+		setSBool((v & 0x80) != 0)
+	} else {
+		resetS()
+	}
 	setZBool(v == 0)
 	setPVBool(v == 0)
 	resetN()
 	setH()
-	if y == 7 {
-		setSBool(v != 0)
-	}
-	return v
 }

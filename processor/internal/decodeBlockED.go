@@ -115,12 +115,12 @@ func ld16Indirect(y byte) {
 
 func neg() {
 	v := reg.a
-	setHBool((v & 0x0f) == 0x00)
+	setHBool((v & 0x0f) != 0x00)
 	setPVBool(v == 0x80)
 	setCBool(v != 0)
-	v = 0 - v
-	reg.a = v
-	setZ()
+	reg.a = 0 - v
+	setZFromA()
+	setSFromA()
 	setN()
 	setUnusedFlagsFromA()
 }
@@ -257,15 +257,15 @@ func blockLD(y byte) {
 func LDI() {
 	v := (*memory).Get(getHL())
 	(*memory).Put(getDE(), v)
-	setDE(getDE() + 1)
 	setHL(getHL() + 1)
+	setDE(getDE() + 1)
 	setBC(getBC() - 1)
 	resetH()
 	resetN()
 	setPVBool(getBC() != 0)
 	temp := v + reg.a
-	set3Bool((temp & 0x08) != 0)
 	set5Bool((temp & 0x02) != 0)
+	set3Bool((temp & 0x08) != 0)
 }
 
 func LDIR() {
@@ -278,15 +278,15 @@ func LDIR() {
 func LDD() {
 	v := (*memory).Get(getHL())
 	(*memory).Put(getDE(), v)
-	setDE(getDE() - 1)
 	setHL(getHL() - 1)
+	setDE(getDE() - 1)
 	setBC(getBC() - 1)
 	resetH()
 	resetN()
 	setPVBool(getBC() != 0)
 	temp := v + reg.a
-	set3Bool((temp & 0x08) != 0)
 	set5Bool((temp & 0x02) != 0)
+	set3Bool((temp & 0x08) != 0)
 }
 
 func LDDR() {
@@ -322,8 +322,8 @@ func CPI() {
 	if getH() {
 		result--
 	}
-	set3Bool((result & 0x08) != 0)
 	set5Bool((result & 0x02) != 0)
+	set3Bool((result & 0x08) != 0)
 }
 
 func CPIR() {
@@ -346,8 +346,8 @@ func CPD() {
 	if getH() {
 		result--
 	}
-	set3Bool((result & 0x08) != 0)
 	set5Bool((result & 0x02) != 0)
+	set3Bool((result & 0x08) != 0)
 }
 
 func CPDR() {

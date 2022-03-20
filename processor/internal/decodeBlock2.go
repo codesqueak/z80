@@ -1,23 +1,24 @@
 package internal
 
 func decodeX2(y, z byte) {
+	v := load8r(z)
 	switch y {
 	case 0: // add
-		alu8BitAdd(load8r(z))
+		alu8BitAdd(v)
 	case 1: // adc
-		alu8BitAdc(load8r(z))
+		alu8BitAdc(v)
 	case 2: // sub
-		alu8BitSub(load8r(z))
+		alu8BitSub(v)
 	case 3: // sbc
-		alu8BitSbc(load8r(z))
+		alu8BitSbc(v)
 	case 4: // and
-		alu8BitAnd(load8r(z))
+		alu8BitAnd(v)
 	case 5: // xor
-		alu8BitXor(load8r(z))
+		alu8BitXor(v)
 	case 6: // or
-		alu8BitOr(load8r(z))
+		alu8BitOr(v)
 	default: // cp
-		alu8BitCp(load8r(z))
+		alu8BitCp(v)
 	}
 }
 
@@ -69,7 +70,7 @@ func alu8BitSbc(v byte) {
 	}
 	setHalfCarryFlagSubCarry(reg.a, v, c)
 	setOverflowFlagSub(v, c == 1)
-	setCBool(v+c > reg.a)
+	setCBool(uint16(v)+uint16(c) > uint16(reg.a))
 	reg.a = reg.a - v - c
 	setSFromA()
 	setZFromA()

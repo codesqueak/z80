@@ -98,7 +98,7 @@ func incDec163IXIY(y byte) {
 
 // INC r[y]
 func inc4IXIY(y byte) {
-	v := load8rIXIY(y)
+	v, offset := load8rIXIY(y)
 	setHalfCarryFlagAddValue(v, 1)
 	setPVBool(v == 0x7F)
 	v++
@@ -107,11 +107,14 @@ func inc4IXIY(y byte) {
 	setZFromV(v)
 	resetN()
 	setUnusedFlagsFromV(v)
+	if offset {
+		reg.pc++
+	}
 }
 
 // DEC r[y]
 func dec5IXIY(y byte) {
-	v := load8rIXIY(y)
+	v, offset := load8rIXIY(y)
 	setHalfCarryFlagSubValue(v, 1)
 	setPVBool(v == 0x80)
 	v = v - 1
@@ -120,11 +123,20 @@ func dec5IXIY(y byte) {
 	setZFromV(v)
 	setN()
 	setUnusedFlagsFromV(v)
+	if offset {
+		reg.pc++
+	}
 }
 
 // LD r[y], n
 func ld6IXIY(y byte) {
-	v := (*memory).Get(reg.pc)
-	reg.pc++
-	store8rIXIY(v, y)
+	if y == 6 { // ld (ix+dd), nn
+		v := (*memory).Get(reg.pc + 1)
+		store8rIXIY(v, y)
+		reg.pc = reg.pc + 2
+	} else { // ld r, nn
+		v := (*memory).Get(reg.pc)
+		store8rIXIY(v, y)
+		reg.pc++
+	}
 }

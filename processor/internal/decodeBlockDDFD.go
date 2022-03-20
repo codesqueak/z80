@@ -28,23 +28,27 @@ func decodeDDFD(dd bool) {
 }
 
 func decodeX2IXIY(y, z byte) {
+	v, offset := load8rIXIY(z)
 	switch y {
 	case 0: // add
-		alu8BitAdd(load8rIXIY(z))
+		alu8BitAdd(v)
 	case 1: // adc
-		alu8BitAdc(load8rIXIY(z))
+		alu8BitAdc(v)
 	case 2: // sub
-		alu8BitSub(load8rIXIY(z))
+		alu8BitSub(v)
 	case 3: // sbc
-		alu8BitSbc(load8rIXIY(z))
+		alu8BitSbc(v)
 	case 4: // and
-		alu8BitAnd(load8rIXIY(z))
+		alu8BitAnd(v)
 	case 5: // xor
-		alu8BitXor(load8rIXIY(z))
+		alu8BitXor(v)
 	case 6: // or
-		alu8BitOr(load8rIXIY(z))
+		alu8BitOr(v)
 	default: // cp
-		alu8BitCp(load8rIXIY(z))
+		alu8BitCp(v)
+	}
+	if offset {
+		reg.pc++
 	}
 }
 

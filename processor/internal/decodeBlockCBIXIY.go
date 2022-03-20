@@ -2,6 +2,7 @@ package internal
 
 func decodeCBIXIY() {
 	addr := getIndex() + getIXIY()
+	reg.pc++
 	inst := (*memory).Get(reg.pc)
 	// fmt.Printf("inst %04x \n", inst)
 	reg.pc++
@@ -49,8 +50,7 @@ func ldRotIXIY(addr uint16, y, z byte) {
 // BIT y, (IX+d)
 func bitIXIY(addr uint16, y byte) {
 	v := (*memory).Get(addr)
-	v = bitGeneric(v, y)
-	(*memory).Put(addr, v)
+	bitGeneric(v, y)
 }
 
 // LD r[z], RES y, (IX+d)
@@ -66,7 +66,7 @@ func ldResIXIY(addr uint16, y, z byte) {
 // LD r[z], SET y, (IX+d)
 func ldSetIXIY(addr uint16, y, z byte) {
 	v := (*memory).Get(addr)
-	v = v & setBitTable[y]
+	v = v | setBitTable[y]
 	(*memory).Put(addr, v)
 	if z != 6 {
 		store8r(v, z)

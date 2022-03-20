@@ -10,7 +10,7 @@ var memory *hw.Memory
 var io *hw.IO
 var reg Registers
 var initialized = false
-var count uint16
+var count uint32
 
 func Build(mem *hw.Memory, ports *hw.IO) error {
 	if mem == nil {
@@ -41,21 +41,25 @@ func RunOne() (bool, error) {
 func execute() bool {
 	inst := (*memory).Get(reg.pc)
 	//
-	//fmt.Printf("%04x ", count)
-	//fmt.Printf("addr: %04x ", reg.pc)
-	//fmt.Printf("inst: %02x ", inst)
-	//fmt.Printf("A:%02x%02x ", reg.a, reg.f)
-	//fmt.Printf("BC:")
-	//regAndMem(getBC())
-	//fmt.Printf("DE:")
-	//regAndMem(getDE())
-	//fmt.Printf("HL:")
-	//regAndMem(getHL())
-	//fmt.Printf("SP:")
-	//regAndMem(reg.sp)
-	//fmt.Printf(getFlags() + "\n")
-	//line(0x2c80)
-	//count++
+	//if count > 0x4bae00 {
+	//	fmt.Printf("%06x ", count)
+	//	fmt.Printf("addr: %04x ", reg.pc)
+	//	fmt.Printf("inst: %02x ", inst)
+	//	fmt.Printf("A:%02x%02x ", reg.a, reg.f)
+	//	fmt.Printf("BC:")
+	//	regAndMem(getBC())
+	//	fmt.Printf("DE:")
+	//	regAndMem(getDE())
+	//	fmt.Printf("HL:")
+	//	regAndMem(getHL())
+	//	fmt.Printf("SP:")
+	//	fmt.Printf(" " + getFlags() + "\n")
+	//	//		line(0x2c80)
+	//}
+	//if count == 0x500000 {
+	//	fmt.Println("xyzzy")
+	//}
+	count++
 	//
 	reg.pc++
 	if inst == 0x76 { // halt
