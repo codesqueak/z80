@@ -33,7 +33,7 @@ func relativeJumps0(y byte) {
 		reg.f = reg.f_
 		reg.f_ = t
 	case 2: // djnz dd
-		reg.b = reg.b - 1
+		reg.b--
 		if reg.b != 0 {
 			relativeJump()
 		} else {
@@ -58,15 +58,14 @@ func loadAdd16Immediate1(y byte) {
 		reg.pc = reg.pc + 2
 	} else { // ADD HL, rp[p]
 		hl := getHL()
-		right := getRP(p)
-		result := hl + right
+		rp := getRP(p)
+		result := hl + rp
 		//
 		resetN()
-		temp := (hl & 0x0FFF) + (right & 0x0FFF) // upper 8 half carry
-		setHBool(temp&0xF000 != 0)
+		setHBool(((hl&0x0FFF)+(rp&0x0FFF))&0x0FFF != 0)
 		set3Bool((result & 0x0800) != 0)
 		set5Bool((result & 0x2000) != 0)
-		setCBool(uint32(hl)+uint32(right) > 0xFFFF)
+		setCBool((uint32(hl)+uint32(rp))&0xFFFF != 0)
 		setHL(result)
 	}
 }
@@ -128,7 +127,7 @@ func dec5(y byte) {
 	v := load8r(y)
 	setHalfCarryFlagSubValue(v, 1)
 	setPVBool(v == 0x80)
-	v = v - 1
+	v--
 	store8r(v, y)
 	setSFromV(v)
 	setZFromV(v)
@@ -146,7 +145,7 @@ func ld6(y byte) {
 func accFlagOps7(y byte) {
 	switch y {
 	case 0: // RLCA
-		carry := reg.a >= 0x80
+		carry := reg.a&0x80 != 0
 		reg.a = reg.a << 1
 		if carry {
 			setC()
@@ -170,16 +169,12 @@ func accFlagOps7(y byte) {
 		resetN()
 		setUnusedFlagsFromA()
 	case 2: // RLA
-		carry := reg.a >= 0x80
+		carry := reg.a&0x80 != 0
 		reg.a = reg.a << 1
 		if getC() {
 			reg.a = reg.a | 0x01
 		}
-		if carry {
-			setC()
-		} else {
-			resetC()
-		}
+		setCBool(carry)
 		resetH()
 		resetN()
 		setUnusedFlagsFromA()
@@ -189,11 +184,7 @@ func accFlagOps7(y byte) {
 		if getC() {
 			reg.a = reg.a | 0x80
 		}
-		if carry {
-			setC()
-		} else {
-			resetC()
-		}
+		setCBool(carry)
 		resetH()
 		resetN()
 		setUnusedFlagsFromA()
@@ -215,11 +206,7 @@ func accFlagOps7(y byte) {
 		} else {
 			alu8BitAdd(incr) // add_a(incr)
 		}
-		if carry {
-			setC()
-		} else {
-			resetC()
-		}
+		setCBool(carry)
 		setPVFromA()
 	case 5: // CPL
 		reg.a = reg.a ^ 0xFF

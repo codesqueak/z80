@@ -60,7 +60,7 @@ func popRetExx(y byte) {
 			t = reg.l
 			reg.l = reg.l_
 			reg.l_ = t
-		case 2: // JP (HL)
+		case 2: // JP HL
 			reg.pc = getHL()
 		default: // LD SP, HL
 			reg.sp = getHL()

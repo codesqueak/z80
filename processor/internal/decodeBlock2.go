@@ -110,13 +110,12 @@ func alu8BitXor(v byte) {
 
 /* 8 bit CP */
 func alu8BitCp(v byte) {
-	reg.f = flag_N
-	setHBool((reg.a & 0x0F) < (v & 0x0f))
+	setHalfCarryFlagSub(v)
+	setOverflowFlagSub(v, false)
 	setCBool(v > reg.a)
 	r := reg.a - v
-	setSBool((r & flag_S) != 0)
-	set3Bool((v & flag_3) != 0)
-	set5Bool((v & flag_5) != 0)
-	setZBool(r == 0)
-	setOverflowFlagSub(v, false)
+	setSFromV(r)
+	setZFromV(r)
+	setN()
+	setUnusedFlagsFromV(v)
 }

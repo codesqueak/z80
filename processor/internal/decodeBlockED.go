@@ -63,38 +63,38 @@ func sbcadchl(y byte) {
 	p, q := getPQ(y)
 	if q == 0 { // SBC HL, rp[p]
 		hl := getHL()
-		v := getRP(p)
+		rp := getRP(p)
 		var c uint32 = 0
 		if getC() {
 			c = 1
 		}
-		ans32 := uint32(hl) - uint32(v) - c
+		ans32 := uint32(hl) - uint32(rp) - c
 		ans16 := uint16(ans32 & 0xFFFF)
 		setSBool((ans16 & 0x8000) != 0)
 		set3Bool((ans16 & 0x0800) != 0)
 		set5Bool((ans16 & 0x2000) != 0)
 		setZBool(ans16 == 0)
-		setCBool(ans32 < 0)
-		setOverflowFlagSub16(hl, v, c)
-		setHBool((((hl & 0x0fff) - (v & 0x0fff) - uint16(c)) & 0x1000) != 0)
+		setCBool((ans32 & 0xFFFF) != 0)
+		setOverflowFlagSub16(hl, rp, c)
+		setHBool((((hl & 0x0fff) - (rp & 0x0fff) - uint16(c)) & 0xF000) != 0)
 		setN()
 		setHL(ans16)
 	} else { // ADC HL, rp[p]
 		hl := getHL()
-		v := getRP(p)
+		rp := getRP(p)
 		var c uint32 = 0
 		if getC() {
 			c = 1
 		}
-		ans32 := uint32(hl) + uint32(v) + c
+		ans32 := uint32(hl) + uint32(rp) + c
 		ans16 := uint16(ans32 & 0xFFFF)
 		setSBool((ans16 & 0x8000) != 0)
 		set3Bool((ans16 & 0x0800) != 0)
 		set5Bool((ans16 & 0x2000) != 0)
 		setZBool(ans16 == 0)
 		setCBool(ans32 > 0xFFFF)
-		setOverflowFlagAdd16(hl, v, c)
-		setHBool((((hl & 0x0fff) + (v & 0x0fff) + uint16(c)) & 0x1000) != 0)
+		setOverflowFlagAdd16(hl, rp, c)
+		setHBool((((hl & 0x0fff) + (rp & 0x0fff) + uint16(c)) & 0xF000) != 0)
 		setN()
 		setHL(ans16)
 	}

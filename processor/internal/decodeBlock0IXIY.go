@@ -28,31 +28,14 @@ func loadAdd16Immediate1IXIY(y byte) {
 		reg.pc = reg.pc + 2
 	} else { // ADD IXIY, rp[p]
 		ixiy := getIXIY()
-		right := getRPIXIY(p)
-		result := ixiy + right
+		rp := getRPIXIY(p)
+		result := ixiy + rp
 		//
 		resetN()
-		temp := (ixiy & 0x0FFF) + (right & 0x0FFF) // upper 8 half carry
-		if (temp & 0xF000) != 0 {
-			setH()
-		} else {
-			resetH()
-		}
-		if (result & 0x0800) != 0 {
-			set3()
-		} else {
-			reset3()
-		}
-		if (result & 0x2000) != 0 {
-			set5()
-		} else {
-			reset5()
-		}
-		if result < ixiy { // overflow ?
-			setC()
-		} else {
-			resetC()
-		}
+		setHBool((ixiy&0x0FFF)+(rp&0x0FFF) >= 0xF000) // upper 8 half carry
+		set3Bool((result & 0x0800) != 0)
+		set5Bool((result & 0x2000) != 0)
+		setCBool(uint32(ixiy)+uint32(rp) > 0xFFFF)
 		setIXIY(result)
 	}
 }

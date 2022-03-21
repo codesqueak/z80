@@ -9,7 +9,11 @@ func decodeCB() {
 	case 0: // rot[y] r[z]
 		rotate(y, z)
 	case 1: // BIT y, r[z]
-		bit(y, z)
+		if z == 6 {
+			bitInMemory(y, getHL())
+		} else {
+			bit(y, z)
+		}
 	case 2: // RES y, r[z]
 		store8r(load8r(z)&resetBitTable[y], z)
 	default: // SET y, r[z]
@@ -138,19 +142,20 @@ func srl(v byte) byte {
 
 func bit(y, z byte) {
 	v := load8r(z)
-	setUnusedFlagsFromV(v)
+	setUnusedFlagsFromV(v) // very odd, only for direct reg access, not (rr)
+	bitGeneric(v, y)
+}
+
+func bitInMemory(y byte, addr uint16) {
+	v := (*memory).Get(addr)
 	bitGeneric(v, y)
 }
 
 func bitGeneric(v, y byte) {
 	v = v & setBitTable[y]
-	if y == 7 {
-		setSBool((v & 0x80) != 0)
-	} else {
-		resetS()
-	}
-	setZBool(v == 0)
+	setSBool((y == 7) && (v != 0))
+	setH()
+	setZFromV(v)
 	setPVBool(v == 0)
 	resetN()
-	setH()
 }

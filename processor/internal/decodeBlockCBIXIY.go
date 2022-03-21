@@ -49,8 +49,7 @@ func ldRotIXIY(addr uint16, y, z byte) {
 
 // BIT y, (IX+d)
 func bitIXIY(addr uint16, y byte) {
-	v := (*memory).Get(addr)
-	bitGeneric(v, y)
+	bitInMemory(y, addr)
 }
 
 // LD r[z], RES y, (IX+d)
