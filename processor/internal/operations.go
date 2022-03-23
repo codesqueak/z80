@@ -140,16 +140,16 @@ func push(v uint16) {
 	(*memory).Put(reg.sp, lsb)
 }
 
-func getHL() uint16 {
-	return uint16(reg.h)<<8 | uint16(reg.l)
-}
-
 func getIXIY() uint16 {
 	if reg.ddMode {
 		return reg.ix
 	} else {
 		return reg.iy
 	}
+}
+
+func getHL() uint16 {
+	return uint16(reg.h)<<8 | uint16(reg.l)
 }
 
 func getDE() uint16 {
@@ -643,66 +643,38 @@ func setHalfCarryFlagSubCarry(left, right, carry byte) {
 
 /* 2's compliment overflow flag control */
 //
-// Find better way to do these ops !!!
-//
 func setOverflowFlagAdd(rv byte, c bool) {
-	left := int16(reg.a)
-	right := int16(rv)
-	if left > 127 {
-		left = left - 256
-	}
-	if right > 127 {
-		right = right - 256
-	}
-	left = left + right
+	left := int16(int8(reg.a))
+	right := int16(int8(rv))
+	r := left + right
 	if c {
-		left++
+		r++
 	}
-	setPVBool((left < -128) || (left > 127))
+	setPVBool(r < -128 || r > 127)
 }
 
 func setOverflowFlagSub(rv byte, c bool) {
-	left := int16(reg.a)
-	right := int16(rv)
-	if left > 127 {
-		left = left - 256
-	}
-	if right > 127 {
-		right = right - 256
-	}
-	left = left - right
+	left := int16(int8(reg.a))
+	right := int16(int8(rv))
+	r := left - right
 	if c {
-		left--
+		r--
 	}
-	setPVBool((left < -128) || (left > 127))
+	setPVBool(r < -128 || r > 127)
 }
 
-/* 2's compliment overflow flag control */
 func setOverflowFlagSub16(rr, nn uint16, cc uint32) {
-	left := int32(rr)
-	right := int32(nn)
+	left := int32(int16(rr))
+	right := int32(int16(nn))
 	carry := int32(cc)
-	if left > 32767 {
-		left = left - 65536
-	}
-	if right > 32767 {
-		right = right - 65536
-	}
 	r := left - right - carry
-	setPVBool((r < -32768) || (r > 32767))
+	setPVBool(r < -32768 || r > 32767)
 }
 
-/* 2's compliment overflow flag control */
 func setOverflowFlagAdd16(rr, nn uint16, cc uint32) {
-	left := int32(rr)
-	right := int32(nn)
-	if left > 32767 {
-		left = left - 65536
-	}
-	if right > 32767 {
-		right = right - 65536
-	}
+	left := int32(int16(rr))
+	right := int32(int16(nn))
 	carry := int32(cc)
 	r := left + right + carry
-	setPVBool((r < -32768) || (r > 32767))
+	setPVBool(r < -32768 || r > 32767)
 }

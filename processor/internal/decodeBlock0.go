@@ -62,10 +62,10 @@ func loadAdd16Immediate1(y byte) {
 		result := hl + rp
 		//
 		resetN()
-		setHBool(((hl&0x0FFF)+(rp&0x0FFF))&0x0FFF != 0)
+		setHBool((hl&0x0FFF)+(rp&0x0FFF) >= 0x1000) // upper 8 half carry
 		set3Bool((result & 0x0800) != 0)
 		set5Bool((result & 0x2000) != 0)
-		setCBool((uint32(hl)+uint32(rp))&0xFFFF != 0)
+		setCBool(uint32(hl)+uint32(rp) > 0xFFFF)
 		setHL(result)
 	}
 }

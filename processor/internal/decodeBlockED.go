@@ -69,14 +69,14 @@ func sbcadchl(y byte) {
 			c = 1
 		}
 		ans32 := uint32(hl) - uint32(rp) - c
-		ans16 := uint16(ans32 & 0xFFFF)
+		ans16 := uint16(ans32)
 		setSBool((ans16 & 0x8000) != 0)
 		set3Bool((ans16 & 0x0800) != 0)
 		set5Bool((ans16 & 0x2000) != 0)
 		setZBool(ans16 == 0)
-		setCBool((ans32 & 0xFFFF) != 0)
+		setCBool(ans32 > 0xFFFF)
 		setOverflowFlagSub16(hl, rp, c)
-		setHBool((((hl & 0x0fff) - (rp & 0x0fff) - uint16(c)) & 0xF000) != 0)
+		setHBool((hl&0x0fff)-(rp&0x0fff)-uint16(c) >= 0x1000)
 		setN()
 		setHL(ans16)
 	} else { // ADC HL, rp[p]
@@ -87,15 +87,15 @@ func sbcadchl(y byte) {
 			c = 1
 		}
 		ans32 := uint32(hl) + uint32(rp) + c
-		ans16 := uint16(ans32 & 0xFFFF)
+		ans16 := uint16(ans32)
 		setSBool((ans16 & 0x8000) != 0)
 		set3Bool((ans16 & 0x0800) != 0)
 		set5Bool((ans16 & 0x2000) != 0)
 		setZBool(ans16 == 0)
 		setCBool(ans32 > 0xFFFF)
 		setOverflowFlagAdd16(hl, rp, c)
-		setHBool((((hl & 0x0fff) + (rp & 0x0fff) + uint16(c)) & 0xF000) != 0)
-		setN()
+		setHBool((hl&0x0fff)+(rp&0x0fff)+uint16(c) >= 0x1000)
+		resetN()
 		setHL(ans16)
 	}
 }

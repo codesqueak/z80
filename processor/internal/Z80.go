@@ -41,7 +41,7 @@ func RunOne() (bool, error) {
 func execute() bool {
 	inst := (*memory).Get(reg.pc)
 	//
-	//if count > 0x4bae00 {
+	//if count > 0x2643BC00 {
 	//	fmt.Printf("%06x ", count)
 	//	fmt.Printf("addr: %04x ", reg.pc)
 	//	fmt.Printf("inst: %02x ", inst)
@@ -53,6 +53,7 @@ func execute() bool {
 	//	fmt.Printf("HL:")
 	//	regAndMem(getHL())
 	//	fmt.Printf("SP:")
+	//	fmt.Printf("%04x ", reg.sp)
 	//	fmt.Printf(" " + getFlags() + "\n")
 	//	//		line(0x2c80)
 	//}
