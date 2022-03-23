@@ -31,16 +31,14 @@ func RunOne() (bool, error) {
 	if !initialized {
 		return false, errors.New("CPU not initialized")
 	}
-	//
-	halt := execute()
-	//
-	return halt, nil
+	return execute(), nil
 }
 
 // decode and execute one instruction
+// return halt state
 func execute() bool {
 	inst := (*memory).Get(reg.pc)
-	//
+
 	//if count > 0x2643BC00 {
 	//	fmt.Printf("%06x ", count)
 	//	fmt.Printf("addr: %04x ", reg.pc)
@@ -57,10 +55,8 @@ func execute() bool {
 	//	fmt.Printf(" " + getFlags() + "\n")
 	//	//		line(0x2c80)
 	//}
-	//if count == 0x500000 {
-	//	fmt.Println("xyzzy")
-	//}
-	count++
+	//
+	//count++
 	//
 	reg.pc++
 	if inst == 0x76 { // halt
@@ -70,6 +66,7 @@ func execute() bool {
 		return false
 	}
 
+	// Initial instruction decode
 	x, y, z := basicDecode(inst)
 	switch x {
 	case 0:
@@ -93,14 +90,6 @@ func GetPC() uint16 {
 }
 
 // utility
-
-func dumpRegs() {
-	fmt.Printf("reg A: %d \n", reg.a)
-	fmt.Printf("reg F: %d \n", reg.f)
-}
-
-func dump() {
-}
 
 func getFlags() string {
 	flagChar := "SZ5H3PNC"

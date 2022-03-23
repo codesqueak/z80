@@ -1,8 +1,8 @@
 package internal
 
+// ED Prefixed Instructions
 func decodeED() {
 	inst := (*memory).Get(reg.pc)
-	//	fmt.Printf("inst ED : %x\n", inst)
 	reg.pc++
 	x, y, z := basicDecode(inst)
 	switch x {
@@ -61,43 +61,32 @@ func outC(y byte) {
 
 func sbcadchl(y byte) {
 	p, q := getPQ(y)
+	hl := getHL()
+	rp := getRP(p)
+	var c uint32 = 0
+	if getC() {
+		c = 1
+	}
+	var ans32 uint32
+	var ans16 uint16
 	if q == 0 { // SBC HL, rp[p]
-		hl := getHL()
-		rp := getRP(p)
-		var c uint32 = 0
-		if getC() {
-			c = 1
-		}
-		ans32 := uint32(hl) - uint32(rp) - c
-		ans16 := uint16(ans32)
-		setSBool((ans16 & 0x8000) != 0)
-		set3Bool((ans16 & 0x0800) != 0)
-		set5Bool((ans16 & 0x2000) != 0)
-		setZBool(ans16 == 0)
-		setCBool(ans32 > 0xFFFF)
+		ans32 = uint32(hl) - uint32(rp) - c
+		ans16 = uint16(ans32)
 		setOverflowFlagSub16(hl, rp, c)
 		setHBool((hl&0x0fff)-(rp&0x0fff)-uint16(c) >= 0x1000)
 		setN()
-		setHL(ans16)
 	} else { // ADC HL, rp[p]
-		hl := getHL()
-		rp := getRP(p)
-		var c uint32 = 0
-		if getC() {
-			c = 1
-		}
-		ans32 := uint32(hl) + uint32(rp) + c
-		ans16 := uint16(ans32)
-		setSBool((ans16 & 0x8000) != 0)
-		set3Bool((ans16 & 0x0800) != 0)
-		set5Bool((ans16 & 0x2000) != 0)
-		setZBool(ans16 == 0)
-		setCBool(ans32 > 0xFFFF)
+		ans32 = uint32(hl) + uint32(rp) + c
+		ans16 = uint16(ans32)
 		setOverflowFlagAdd16(hl, rp, c)
 		setHBool((hl&0x0fff)+(rp&0x0fff)+uint16(c) >= 0x1000)
 		resetN()
-		setHL(ans16)
 	}
+	setHL(ans16)
+	setUnusedFlagsFromV(reg.h)
+	setSFromV(reg.h)
+	setZBool(ans16 == 0)
+	setCBool(ans32 > 0xFFFF)
 }
 
 func ld16Indirect(y byte) {
@@ -115,7 +104,7 @@ func ld16Indirect(y byte) {
 
 func neg() {
 	v := reg.a
-	setHBool((v & 0x0f) != 0x00)
+	setHBool((v & 0x0f) != 0)
 	setPVBool(v == 0x80)
 	setCBool(v != 0)
 	reg.a = 0 - v
@@ -314,8 +303,8 @@ func CPI() {
 	result := reg.a - v
 	setHL(getHL() + 1)
 	setBC(getBC() - 1)
-	setSBool((result & 0x80) != 0)
-	setZBool(result == 0)
+	setSFromV(result)
+	setZFromV(result)
 	setHalfCarryFlagSubValue(reg.a, v)
 	setPVBool(getBC() != 0)
 	setN()
@@ -338,8 +327,8 @@ func CPD() {
 	result := reg.a - v
 	setHL(getHL() - 1)
 	setBC(getBC() - 1)
-	setSBool((result & 0x80) != 0)
-	setZBool(result == 0)
+	setSFromV(result)
+	setZFromV(result)
 	setHalfCarryFlagSubValue(reg.a, v)
 	setPVBool(getBC() != 0)
 	setN()
@@ -374,7 +363,7 @@ func INI() {
 	(*memory).Put(getHL(), (*io).Get(reg.c))
 	reg.b--
 	setHL(getHL() + 1)
-	setZBool(reg.b == 0)
+	setZFromV(reg.b)
 	setN()
 }
 
@@ -389,7 +378,7 @@ func IND() {
 	(*memory).Put(getHL(), (*io).Get(reg.c))
 	reg.b--
 	setHL(getHL() - 1)
-	setZBool(reg.b == 0)
+	setZFromV(reg.b)
 	setN()
 }
 
@@ -417,7 +406,7 @@ func OUTI() {
 	(*io).Put((*memory).Get(getHL()), reg.c)
 	reg.b--
 	setHL(getHL() + 1)
-	setZBool(reg.b == 0)
+	setZFromV(reg.b)
 	setN()
 }
 
@@ -432,7 +421,7 @@ func OUTD() {
 	(*io).Put((*memory).Get(getHL()), reg.c)
 	reg.b--
 	setHL(getHL() - 1)
-	setZBool(reg.b == 0)
+	setZFromV(reg.b)
 	setN()
 }
 

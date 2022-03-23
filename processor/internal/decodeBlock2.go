@@ -1,5 +1,6 @@
 package internal
 
+// Block 2 instructions
 func decodeX2(y, z byte) {
 	v := load8r(z)
 	switch y {
@@ -28,10 +29,8 @@ func alu8BitAdd(v byte) {
 	setOverflowFlagAdd(v, false)
 	setCBool((uint16(reg.a) + uint16(v)) > 0x00FF)
 	reg.a = reg.a + v
-	setSFromA()
-	setZFromA()
 	resetN()
-	setUnusedFlagsFromA()
+	aluSetStandardFlags()
 }
 
 /* 8 bit ADC */
@@ -44,10 +43,8 @@ func alu8BitAdc(v byte) {
 	setOverflowFlagAdd(v, c == 1)
 	setCBool(uint16(reg.a)+uint16(v)+uint16(c) > 0x00FF)
 	reg.a = reg.a + v + c
-	setSFromA()
-	setZFromA()
 	resetN()
-	setUnusedFlagsFromA()
+	aluSetStandardFlags()
 }
 
 /* 8 bit SUB */
@@ -56,10 +53,8 @@ func alu8BitSub(v byte) {
 	setOverflowFlagSub(v, false)
 	setCBool(v > reg.a)
 	reg.a = reg.a - v
-	setSFromA()
-	setZFromA()
 	setN()
-	setUnusedFlagsFromA()
+	aluSetStandardFlags()
 }
 
 /* 8 bit SBC */
@@ -72,40 +67,32 @@ func alu8BitSbc(v byte) {
 	setOverflowFlagSub(v, c == 1)
 	setCBool(uint16(v)+uint16(c) > uint16(reg.a))
 	reg.a = reg.a - v - c
-	setSFromA()
-	setZFromA()
 	setN()
-	setUnusedFlagsFromA()
+	aluSetStandardFlags()
 }
 
 /* 8 bit AND  */
 func alu8BitAnd(v byte) {
 	reg.f = flag_H // set the H flag
 	reg.a = reg.a & v
-	setSFromA()
-	setZFromA()
 	setPVFromA()
-	setUnusedFlagsFromA()
+	aluSetStandardFlags()
 }
 
 /* 8 bit OR  */
 func alu8BitOr(v byte) {
 	reg.f = 0
 	reg.a = reg.a | v
-	setSFromA()
-	setZFromA()
 	setPVFromA()
-	setUnusedFlagsFromA()
+	aluSetStandardFlags()
 }
 
 /* 8 bit XOR  */
 func alu8BitXor(v byte) {
 	reg.f = 0
 	reg.a = reg.a ^ v
-	setSFromA()
-	setZFromA()
 	setPVFromA()
-	setUnusedFlagsFromA()
+	aluSetStandardFlags()
 }
 
 /* 8 bit CP */
@@ -114,8 +101,14 @@ func alu8BitCp(v byte) {
 	setOverflowFlagSub(v, false)
 	setCBool(v > reg.a)
 	r := reg.a - v
+	setN()
 	setSFromV(r)
 	setZFromV(r)
-	setN()
 	setUnusedFlagsFromV(v)
+}
+
+func aluSetStandardFlags() {
+	setSFromA()
+	setZFromA()
+	setUnusedFlagsFromA()
 }

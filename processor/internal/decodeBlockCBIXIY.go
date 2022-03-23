@@ -1,10 +1,10 @@
 package internal
 
+// CB Prefixed Instructions for IX / IY instructions
 func decodeCBIXIY() {
 	addr := getIndex() + getIXIY()
 	reg.pc++
 	inst := (*memory).Get(reg.pc)
-	// fmt.Printf("inst %04x \n", inst)
 	reg.pc++
 	x, y, z := basicDecode(inst)
 	switch x {

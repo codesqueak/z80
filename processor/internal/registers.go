@@ -6,14 +6,13 @@ type Registers struct {
 	// alt 8 bit
 	a_, b_, c_, d_, e_, h_, l_ byte
 	// index
-	ix, iy uint16
+	ix, iy, pc, sp uint16
 	// control
 	f, f_ byte
 	// internal
-	pc, sp, w                 uint16
-	i, r                      byte
-	iff1, iff2                bool
-	nmi_ff                    bool
-	interruptMode             byte
-	indexMode, ddMode, fdMode bool
+	i, r           byte
+	iff1, iff2     bool
+	nmi_ff         bool
+	interruptMode  byte
+	ddMode, fdMode bool
 }

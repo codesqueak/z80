@@ -2,8 +2,8 @@ package internal
 
 import "z80/processor/pkg/hw"
 
+// DD // FD Prefixed Index Instructions
 func decodeDDFD(dd bool) {
-	reg.indexMode = true
 	if dd {
 		reg.ddMode = true
 		reg.fdMode = false
@@ -24,7 +24,6 @@ func decodeDDFD(dd bool) {
 	default:
 		decodeX3IXIY(y, z) // various
 	}
-	reg.indexMode = false
 }
 
 func decodeX2IXIY(y, z byte) {
@@ -156,7 +155,7 @@ func various3_5IXIY(y byte) {
 		case 1:
 			decodeDDFD(true) // really !
 		case 2:
-			decodeED() // ???
+			decodeED() // DD / FD gets ignored
 		default:
 			decodeDDFD(false) // really !
 		}

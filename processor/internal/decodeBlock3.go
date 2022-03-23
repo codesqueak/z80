@@ -4,6 +4,7 @@ import (
 	"z80/processor/pkg/hw"
 )
 
+// Block 3 instructions
 func decodeX3(y, z byte) {
 	switch z {
 	case 0: // RET cc[z]

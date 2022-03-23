@@ -1,6 +1,6 @@
 package internal
 
-// CB-PREFIXED OPCODES
+// CB Prefixed Instructions
 func decodeCB() {
 	inst := (*memory).Get(reg.pc)
 	reg.pc++
@@ -22,23 +22,24 @@ func decodeCB() {
 }
 
 func rotate(y, z byte) {
+	v := load8r(z)
 	switch y {
 	case 0: // RLC
-		store8r(rlc(load8r(z)), z)
+		store8r(rlc(v), z)
 	case 1: // RRC
-		store8r(rrc(load8r(z)), z)
+		store8r(rrc(v), z)
 	case 2: // RL
-		store8r(rl(load8r(z)), z)
+		store8r(rl(v), z)
 	case 3: //  RR
-		store8r(rr(load8r(z)), z)
+		store8r(rr(v), z)
 	case 4: // SLA
-		store8r(sla(load8r(z)), z)
+		store8r(sla(v), z)
 	case 5: // SRA
-		store8r(sra(load8r(z)), z)
+		store8r(sra(v), z)
 	case 6: // SLL
-		store8r(sll(load8r(z)), z)
+		store8r(sll(v), z)
 	default: // SRL
-		store8r(srl(load8r(z)), z)
+		store8r(srl(v), z)
 	}
 }
 

@@ -1,6 +1,7 @@
 package internal
 
-// // LD r[y], r[z]
+// IX, IY Instruction block 1
+// LD r[y], r[z]
 func ldryrzIXIY(y, z byte) {
 	if z == 6 { // Use h,l not ixh, ixl as we have an (ix)
 		addr := indexedAddr()
@@ -8,7 +9,7 @@ func ldryrzIXIY(y, z byte) {
 		v := (*memory).Get(addr)
 		store8r(v, y) // ld r[y], (ix+dd)
 	} else {
-		if y == 6 { // Use h,l not ixh, ixl as we have an (ix)
+		if y == 6 { // Use h,l not ixh, ixl as we have an (ixiy)
 			addr := indexedAddr()
 			reg.pc++
 			v := load8r(z)

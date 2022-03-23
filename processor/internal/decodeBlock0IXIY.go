@@ -1,5 +1,6 @@
 package internal
 
+// IX, IY Instruction block 0
 func decodeX0IXIY(y, z byte) {
 	switch z {
 	case 0:
@@ -30,12 +31,9 @@ func loadAdd16Immediate1IXIY(y byte) {
 		ixiy := getIXIY()
 		rp := getRPIXIY(p)
 		result := ixiy + rp
-		//
 		resetN()
-		temp := (ixiy & 0x0FFF) + (rp & 0x0FFF)
-		setHBool(temp&0xF000 != 0) // upper 8 half carry
-		set3Bool((result & 0x0800) != 0)
-		set5Bool((result & 0x2000) != 0)
+		setHBool(((ixiy&0x0FFF)+(rp&0x0FFF))&0xF000 != 0) // upper 8 half carry
+		setUnusedFlagsFromV(byte(result >> 8))
 		setCBool(uint32(ixiy)+uint32(rp) > 0xFFFF)
 		setIXIY(result)
 	}
@@ -72,11 +70,9 @@ func incDec163IXIY(y byte) {
 	p, q := getPQ(y)
 	v := getRPIXIY(p)
 	if q == 0 {
-		// inc 16
-		setRPIXIY(p, v+1)
+		setRPIXIY(p, v+1) // inc 16
 	} else {
-		// dec 16
-		setRPIXIY(p, v-1)
+		setRPIXIY(p, v-1) // dec 16
 	}
 }
 

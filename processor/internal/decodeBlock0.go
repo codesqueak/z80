@@ -1,5 +1,6 @@
 package internal
 
+// Block 0 instructions
 func decodeX0(y, z byte) {
 	switch z {
 	case 0:
@@ -101,11 +102,9 @@ func incDec163(y byte) {
 	p, q := getPQ(y)
 	v := getRP(p)
 	if q == 0 {
-		// inc 16
-		setRP(p, v+1)
+		setRP(p, v+1) // inc 16
 	} else {
-		// dec 16
-		setRP(p, v-1)
+		setRP(p, v-1) // dec 16
 	}
 }
 
