@@ -1,17 +1,16 @@
 package internal
 
+// Various utility operations
+
 const OCT_DIGIT_Z byte = 0b00_000_111
 const OCT_DIGIT_Y byte = 0b00_111_000
 const OCT_DIGIT_X byte = 0b11_000_000
 const MASK_P byte = 0b00000110
 const MASK_Q byte = 0b00000001
 const LSB uint16 = 0x00FF
-const MSB uint16 = 0xFF00
 const flagS byte = 0b1000_0000
 const flagZ byte = 0b0100_0000
-const flag5 byte = 0b0010_0000
 const flagH byte = 0b0001_0000
-const flag3 byte = 0b0000_1000
 const flagPV byte = 0b0000_0100
 const flagN byte = 0b0000_0010
 const flagC byte = 0b0000_0001
@@ -611,8 +610,6 @@ func setHalfCarryFlagAddCarry(right, carry byte) {
 	right = right & 0x0f
 	setHBool((right+left+carry)&0xF0 != 0)
 }
-
-/* half carry flag control */
 
 func setHalfCarryFlagAdd(right byte) {
 	setHalfCarryFlagAddValue(reg.a, right)

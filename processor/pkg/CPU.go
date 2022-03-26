@@ -9,15 +9,17 @@ func Build(mem *hw.Memory, ports *hw.IO) error {
 	return internal.Build(mem, ports)
 }
 
-// execute one instruction
+// RunOne execute one instruction
 func RunOne() (bool, error) {
 	return internal.RunOne()
 }
 
+// SetStartAddress Set the program counter
 func SetStartAddress(addr uint16) {
 	internal.SetStartAddress(addr)
 }
 
+// GetPC get the program counter
 func GetPC() uint16 {
 	return internal.GetPC()
 }

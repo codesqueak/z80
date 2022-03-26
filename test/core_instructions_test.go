@@ -14,7 +14,7 @@ func TestInstructions(t *testing.T) {
 	var io hw.IO = PORTS{make([]byte, 256)}
 	//
 	for addr := uint16(0); addr < 0xFFFF; addr++ {
-		mem.Put(addr, 0x76)
+		mem.Put(addr, 0x76) // halt
 	}
 	//
 	loadFile("testdata/NAS_Test.nas", &mem)
