@@ -65,7 +65,7 @@ func loadTestCode(mem *hw.Memory) {
 	(*mem).Put(addr, 0x45) //
 	addr++
 	(*mem).Put(addr, 0x00) //
-
+	//
 	addr = 0x45            // get it out of the way of RST addresses
 	(*mem).Put(addr, 0x79) // ld a,c
 	addr++

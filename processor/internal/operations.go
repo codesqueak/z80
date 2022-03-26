@@ -1,17 +1,16 @@
 package internal
 
+// Various utility operations
+
 const OCT_DIGIT_Z byte = 0b00_000_111
 const OCT_DIGIT_Y byte = 0b00_111_000
 const OCT_DIGIT_X byte = 0b11_000_000
 const MASK_P byte = 0b00000110
 const MASK_Q byte = 0b00000001
 const LSB uint16 = 0x00FF
-const MSB uint16 = 0xFF00
 const flagS byte = 0b1000_0000
 const flagZ byte = 0b0100_0000
-const flag5 byte = 0b0010_0000
 const flagH byte = 0b0001_0000
-const flag3 byte = 0b0000_1000
 const flagPV byte = 0b0000_0100
 const flagN byte = 0b0000_0010
 const flagC byte = 0b0000_0001
@@ -29,7 +28,7 @@ const flag_C byte = 0x01
 // for resetting
 const flag_S_N byte = flag_S ^ 0xFF
 const flag_Z_N byte = flag_Z ^ 0xFF
-const flag_5_N byte = flag_Z ^ 0xFF
+const flag_5_N byte = flag_5 ^ 0xFF
 const flag_H_N byte = flag_H ^ 0xFF
 const flag_3_N byte = flag_3 ^ 0xFF
 const flag_PV_N byte = flag_PV ^ 0xFF
@@ -82,22 +81,22 @@ func relativeJump() {
 // condition evaluation on flag register
 func cc(y byte) bool {
 	switch y {
-	case 0x0:
+	case 0x0: // NZ
 		return 0 == (reg.f & flagZ)
-	case 0x1:
+	case 0x1: // Z
 		return 0 != (reg.f & flagZ)
-	case 0x2:
+	case 0x2: // NC
 		return 0 == (reg.f & flagC)
-	case 0x3:
+	case 0x3: // C
 		return 0 != (reg.f & flagC)
-	case 0x4:
+	case 0x4: // PO
 		return 0 == (reg.f & flagPV)
-	case 0x5:
+	case 0x5: // PE
 		return 0 != (reg.f & flagPV)
-	case 0x6:
-		return 0 == (reg.f & flagN)
-	default:
-		return 0 != (reg.f & flagN)
+	case 0x6: // P
+		return 0 == (reg.f & flagS)
+	default: // M
+		return 0 != (reg.f & flagS)
 	}
 }
 
@@ -105,7 +104,7 @@ func cc(y byte) bool {
 func load16FromRAM(addr uint16) uint16 {
 	lsb := uint16((*memory).Get(addr))
 	msb := uint16((*memory).Get(addr + 1))
-	return (msb << 8) + lsb
+	return (msb << 8) | lsb
 }
 
 // load 16 bit from PC address
@@ -130,7 +129,7 @@ func store16ToRAM(addr uint16, v uint16) {
 	(*memory).Put(addr+1, msb)
 }
 
-// put 16 bit value onto teh stack
+// put 16 bit value onto the stack
 func push(v uint16) {
 	lsb := uint8(v & LSB)
 	msb := uint8(v >> 8)
@@ -140,8 +139,16 @@ func push(v uint16) {
 	(*memory).Put(reg.sp, lsb)
 }
 
+func getIXIY() uint16 {
+	if reg.ddMode {
+		return reg.ix
+	} else {
+		return reg.iy
+	}
+}
+
 func getHL() uint16 {
-	return uint16(reg.h)<<8 + uint16(reg.l)
+	return uint16(reg.h)<<8 | uint16(reg.l)
 }
 
 func getDE() uint16 {
@@ -152,9 +159,21 @@ func getBC() uint16 {
 	return uint16(reg.b)<<8 + uint16(reg.c)
 }
 
+func getAF() uint16 {
+	return uint16(reg.a)<<8 + uint16(reg.f)
+}
+
 func setHL(hl uint16) {
 	reg.h = byte(hl >> 8)
 	reg.l = byte(hl & LSB)
+}
+
+func setIXIY(ixiy uint16) {
+	if reg.ddMode {
+		reg.ix = ixiy
+	} else {
+		reg.iy = ixiy
+	}
 }
 
 func setDE(de uint16) {
@@ -163,8 +182,8 @@ func setDE(de uint16) {
 }
 
 func setBC(bc uint16) {
-	reg.d = byte(bc >> 8)
-	reg.e = byte(bc & LSB)
+	reg.b = byte(bc >> 8)
+	reg.c = byte(bc & LSB)
 }
 
 func setAF(af uint16) {
@@ -173,18 +192,26 @@ func setAF(af uint16) {
 }
 
 func setRP(p byte, v uint16) {
-	lsb := byte(v & LSB)
-	msb := byte(v >> 8)
 	switch p {
 	case 0:
-		reg.b = msb
-		reg.c = lsb
+		setBC(v)
 	case 1:
-		reg.d = msb
-		reg.e = lsb
+		setDE(v)
 	case 2:
-		reg.h = msb
-		reg.l = lsb
+		setHL(v)
+	default:
+		reg.sp = v
+	}
+}
+
+func setRPIXIY(p byte, v uint16) {
+	switch p {
+	case 0:
+		setBC(v)
+	case 1:
+		setDE(v)
+	case 2:
+		setIXIY(v)
 	default:
 		reg.sp = v
 	}
@@ -193,50 +220,92 @@ func setRP(p byte, v uint16) {
 func getRP(p byte) uint16 {
 	switch p {
 	case 0:
-		return uint16(reg.b)<<8 + uint16(reg.c)
+		return getBC()
 	case 1:
-		return uint16(reg.d)<<8 + uint16(reg.e)
+		return getDE()
 	case 2:
-		return uint16(reg.h)<<8 + uint16(reg.l)
+		return getHL()
+	default:
+		return reg.sp
+	}
+}
+
+func getRPIXIY(p byte) uint16 {
+	switch p {
+	case 0:
+		return getBC()
+	case 1:
+		return getDE()
+	case 2:
+		return getIXIY()
 	default:
 		return reg.sp
 	}
 }
 
 func setRP2(p byte, v uint16) {
-	lsb := byte(v & LSB)
-	msb := byte(v >> 8)
 	switch p {
 	case 0:
-		reg.b = msb
-		reg.c = lsb
+		setBC(v)
 	case 1:
-		reg.d = msb
-		reg.e = lsb
+		setDE(v)
 	case 2:
-		reg.h = msb
-		reg.l = lsb
+		setHL(v)
 	default:
-		reg.a = msb
-		reg.f = lsb
+		setAF(v)
+	}
+}
+
+func setRP2IXIY(p byte, v uint16) {
+	switch p {
+	case 0:
+		setBC(v)
+	case 1:
+		setDE(v)
+	case 2:
+		setIXIY(v)
+	default:
+		setAF(v)
 	}
 }
 
 func getRP2(p byte) uint16 {
 	switch p {
 	case 0:
-		return uint16(reg.b)<<8 + uint16(reg.c)
+		return getBC()
 	case 1:
-		return uint16(reg.d)<<8 + uint16(reg.e)
+		return getDE()
 	case 2:
-		return uint16(reg.h)<<8 + uint16(reg.l)
+		return getHL()
 	default:
-		return uint16(reg.a)<<8 + uint16(reg.f)
+		return getAF()
 	}
 }
 
-func make16(lsb, msb byte) uint16 {
+func getRP2IXIY(p byte) uint16 {
+	switch p {
+	case 0:
+		return getBC()
+	case 1:
+		return getDE()
+	case 2:
+		return getIXIY()
+	default:
+		return getAF()
+	}
+}
+
+func make16(msb, lsb byte) uint16 {
 	return (uint16(msb) << 8) + uint16(lsb)
+}
+
+// get the +dd part of an index address
+func getIndex() uint16 {
+	dd := uint16((*memory).Get(reg.pc))
+	if dd > 0x7F {
+		dd = dd | 0xFF00
+	}
+	return dd
 }
 
 // 8 bit load
@@ -247,7 +316,7 @@ func load8r(y byte) byte {
 	case 1:
 		return reg.c
 	case 2:
-		return reg.e
+		return reg.d
 	case 3:
 		return reg.e
 	case 4:
@@ -255,10 +324,40 @@ func load8r(y byte) byte {
 	case 5:
 		return reg.l
 	case 6:
-		return (*memory).Get(make16(reg.h, reg.l))
+		return (*memory).Get(getHL())
 	default:
 		return reg.a
+	}
+}
 
+// 8 bit load
+func load8rIXIY(y byte) (byte, bool) {
+	switch y {
+	case 0:
+		return reg.b, false
+	case 1:
+		return reg.c, false
+	case 2:
+		return reg.d, false
+	case 3:
+		return reg.e, false
+	case 4:
+		if reg.ddMode {
+			return byte((reg.ix & 0xFF00) >> 8), false
+		} else {
+			return byte((reg.iy & 0xFF00) >> 8), false
+		}
+	case 5:
+		if reg.ddMode {
+			return byte(reg.ix), false
+		} else {
+			return byte(reg.iy), false
+		}
+	case 6:
+		addr := indexedAddr()
+		return (*memory).Get(addr), true
+	default:
+		return reg.a, false
 	}
 }
 
@@ -278,10 +377,43 @@ func store8r(v byte, y byte) {
 	case 5:
 		reg.l = v
 	case 6:
-		(*memory).Put(make16(reg.h, reg.l), v)
+		(*memory).Put(getHL(), v)
 	case 7:
 		reg.a = v
 	}
+}
+
+// 8 bit store
+func store8rIXIY(v byte, y byte) bool {
+	switch y {
+	case 0:
+		reg.b = v
+	case 1:
+		reg.c = v
+	case 2:
+		reg.d = v
+	case 3:
+		reg.e = v
+	case 4:
+		if reg.ddMode {
+			reg.ix = (reg.ix & 0x00FF) | (uint16(v) << 8)
+		} else {
+			reg.iy = (reg.iy & 0x00FF) | (uint16(v) << 8)
+		}
+	case 5:
+		if reg.ddMode {
+			reg.ix = (reg.ix & 0xFF00) | uint16(v)
+		} else {
+			reg.iy = (reg.iy & 0xFF00) | uint16(v)
+		}
+	case 6:
+		addr := indexedAddr()
+		(*memory).Put(addr, v)
+		return true
+	case 7:
+		reg.a = v
+	}
+	return false
 }
 
 // flag manipulation
@@ -364,9 +496,9 @@ func setPVFromV(v byte) {
 
 func setPVBool(b bool) {
 	if b {
-		setH()
+		setPV()
 	} else {
-		resetH()
+		resetPV()
 	}
 }
 
@@ -378,20 +510,28 @@ func setHBool(b bool) {
 	}
 }
 
-func setSFromA() {
-	if reg.a >= 0x80 {
+func setSFromV(v byte) {
+	if (v & 0x80) != 0 {
 		setS()
 	} else {
 		resetS()
 	}
 }
 
-func setZFromA() {
-	if reg.a == 0 {
+func setSFromA() {
+	setSFromV(reg.a)
+}
+
+func setZFromV(v byte) {
+	if v == 0 {
 		setZ()
 	} else {
 		resetZ()
 	}
+}
+
+func setZFromA() {
+	setZFromV(reg.a)
 }
 
 func setCBool(b bool) {
@@ -440,6 +580,10 @@ func getC() bool {
 	return (reg.f & flagC) != 0
 }
 
+func getZ() bool {
+	return (reg.f & flagZ) != 0
+}
+
 func getH() bool {
 	return (reg.f & flagH) != 0
 }
@@ -464,14 +608,8 @@ func setUnusedFlagsFromV(v byte) {
 func setHalfCarryFlagAddCarry(right, carry byte) {
 	left := reg.a & 0x0f
 	right = right & 0x0f
-	if (right + left + carry) > 0x0f {
-		setH()
-	} else {
-		resetH()
-	}
+	setHBool((right+left+carry)&0xF0 != 0)
 }
-
-/* half carry flag control */
 
 func setHalfCarryFlagAdd(right byte) {
 	setHalfCarryFlagAddValue(reg.a, right)
@@ -480,11 +618,7 @@ func setHalfCarryFlagAdd(right byte) {
 func setHalfCarryFlagAddValue(left, right byte) {
 	left = left & 0x0F
 	right = right & 0x0F
-	if (right + left) > 0x0f {
-		setH()
-	} else {
-		resetH()
-	}
+	setHBool((right+left)&0xF0 != 0)
 }
 
 func setHalfCarryFlagSub(right byte) {
@@ -494,56 +628,50 @@ func setHalfCarryFlagSub(right byte) {
 func setHalfCarryFlagSubValue(left, right byte) {
 	left = left & 0x0F
 	right = right & 0x0F
-	if left < right {
-		setH()
-	} else {
-		resetH()
-	}
+	setHBool((left-right)&0xF0 != 0)
 }
 
 /* half carry flag control */
 func setHalfCarryFlagSubCarry(left, right, carry byte) {
 	left = left & 0x0F
 	right = right & 0x0F
-	if left < (right + carry) {
-		setH()
-	} else {
-		resetH()
-	}
+	setHBool((left-right-carry)&0xF0 != 0)
 }
 
 /* 2's compliment overflow flag control */
 //
-// Find better way to do these ops !!!
-//
 func setOverflowFlagAdd(rv byte, c bool) {
-	left := int16(reg.a)
-	right := int16(rv)
-	if left > 127 {
-		left = left - 256
-	}
-	if right > 127 {
-		right = right - 256
-	}
-	left = left + right
+	left := int16(int8(reg.a))
+	right := int16(int8(rv))
+	r := left + right
 	if c {
-		left++
+		r++
 	}
-	setPVBool((left < -128) || (left > 127))
+	setPVBool(r < -128 || r > 127)
 }
 
 func setOverflowFlagSub(rv byte, c bool) {
-	left := int16(reg.a)
-	right := int16(rv)
-	if left > 127 {
-		left = left - 256
-	}
-	if right > 127 {
-		right = right - 256
-	}
-	left = left - right
+	left := int16(int8(reg.a))
+	right := int16(int8(rv))
+	r := left - right
 	if c {
-		left--
+		r--
 	}
-	setPVBool((left < -128) || (left > 127))
+	setPVBool(r < -128 || r > 127)
+}
+
+func setOverflowFlagSub16(rr, nn uint16, cc uint32) {
+	left := int32(int16(rr))
+	right := int32(int16(nn))
+	carry := int32(cc)
+	r := left - right - carry
+	setPVBool(r < -32768 || r > 32767)
+}
+
+func setOverflowFlagAdd16(rr, nn uint16, cc uint32) {
+	left := int32(int16(rr))
+	right := int32(int16(nn))
+	carry := int32(cc)
+	r := left + right + carry
+	setPVBool(r < -32768 || r > 32767)
 }

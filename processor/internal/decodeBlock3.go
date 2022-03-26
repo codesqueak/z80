@@ -4,6 +4,7 @@ import (
 	"z80/processor/pkg/hw"
 )
 
+// Block 3 instructions
 func decodeX3(y, z byte) {
 	switch z {
 	case 0: // RET cc[z]
@@ -60,8 +61,8 @@ func popRetExx(y byte) {
 			t = reg.l
 			reg.l = reg.l_
 			reg.l_ = t
-		case 2: // JP (HL)
-			reg.pc = load16FromRAM(getHL())
+		case 2: // JP HL
+			reg.pc = getHL()
 		default: // LD SP, HL
 			reg.sp = getHL()
 		}
@@ -114,7 +115,6 @@ func various3_3(y byte, io *hw.IO) {
 func callcc(y byte) {
 	if cc(y) {
 		addr := load16FromPC()
-		reg.pc = reg.pc + 2
 		push(reg.pc)
 		reg.pc = addr
 	} else {
@@ -125,22 +125,20 @@ func callcc(y byte) {
 // various
 func various3_5(y byte) {
 	p, q := getPQ(y)
-	if q == 0 { // POP rp2[p]
-		v := pop()
-		setRP2(p, v)
+	if q == 0 { // PUSH rp2[p]
+		push(getRP2(p))
 	} else {
 		switch p {
 		case 0: // CALL nn
 			addr := load16FromPC()
-			reg.pc = reg.pc + 2
 			push(reg.pc)
 			reg.pc = addr
 		case 1:
-			decodeDD()
+			decodeDDFD(true)
 		case 2:
 			decodeED()
 		default:
-			decodeFD()
+			decodeDDFD(false)
 		}
 	}
 }

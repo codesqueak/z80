@@ -14,8 +14,12 @@ func (io PORTS) Put(addr byte, data byte) {
 	io.Ports[addr] = data
 
 	if data < 32 {
-		fmt.Println()
+		fmt.Printf("\n")
 	} else {
-		fmt.Print(string(data))
+		if data < 128 {
+			fmt.Print(string(data))
+		} else {
+			fmt.Print("?")
+		}
 	}
 }
