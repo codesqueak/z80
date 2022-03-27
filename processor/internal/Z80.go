@@ -3,7 +3,7 @@ package internal
 import (
 	"errors"
 	"fmt"
-	"z80/processor/pkg/hw"
+	"github.com/codesqueak/z80/processor/pkg/hw"
 )
 
 var memory *hw.Memory

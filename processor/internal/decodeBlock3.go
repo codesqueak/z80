@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"z80/processor/pkg/hw"
+	"github.com/codesqueak/z80/processor/pkg/hw"
 )
 
 // Block 3 instructions

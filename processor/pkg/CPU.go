@@ -1,8 +1,8 @@
 package pkg
 
 import (
-	"z80/processor/internal"
-	"z80/processor/pkg/hw"
+	"github.com/codesqueak/z80/processor/internal"
+	"github.com/codesqueak/z80/processor/pkg/hw"
 )
 
 func Build(mem *hw.Memory, ports *hw.IO) error {

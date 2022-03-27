@@ -1,6 +1,6 @@
 package internal
 
-import "z80/processor/pkg/hw"
+import "github.com/codesqueak/z80/processor/pkg/hw"
 
 // DD // FD Prefixed Index Instructions
 func decodeDDFD(dd bool) {

@@ -2,11 +2,11 @@ package test
 
 import (
 	"bufio"
+	"github.com/codesqueak/z80/processor/pkg/hw"
 	"log"
 	"os"
 	"strconv"
 	"strings"
-	"z80/processor/pkg/hw"
 )
 
 // load  a .nas format file into memory

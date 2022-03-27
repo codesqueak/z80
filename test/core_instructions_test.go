@@ -2,10 +2,10 @@ package test
 
 import (
 	"fmt"
+	"github.com/codesqueak/z80/processor/pkg"
+	"github.com/codesqueak/z80/processor/pkg/hw"
 	"os"
 	"testing"
-	"z80/processor/pkg"
-	"z80/processor/pkg/hw"
 )
 
 func TestInstructions(t *testing.T) {
