@@ -23,3 +23,18 @@ func SetStartAddress(addr uint16) {
 func GetPC() uint16 {
 	return internal.GetPC()
 }
+
+// GetFlags returns set flag values from SZ5H3PNC
+func GetFlags() string {
+	return internal.GetFlags()
+}
+
+// AddressAndMem outputs an address and the memory location it points to
+func AddressAndMem(addr uint16) {
+	internal.AddressAndMem(addr)
+}
+
+// Line outputs the 8 bytes in memory an address points to
+func Line(addr uint16) {
+	internal.Line(addr)
+}

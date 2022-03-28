@@ -10,14 +10,15 @@ var memory *hw.Memory
 var io *hw.IO
 var reg Registers
 var initialized = false
-var count uint32
+
+// var count uint32
 
 func Build(mem *hw.Memory, ports *hw.IO) error {
 	if mem == nil {
-		return errors.New("Memory not defined")
+		return errors.New("memory not defined")
 	}
 	if ports == nil {
-		return errors.New("I/O not defined")
+		return errors.New("i/o not defined")
 	}
 	memory = mem
 	io = ports
@@ -29,7 +30,7 @@ func Build(mem *hw.Memory, ports *hw.IO) error {
 // execute one instruction
 func RunOne() (bool, error) {
 	if !initialized {
-		return false, errors.New("CPU not initialized")
+		return false, errors.New("the CPU is not initialized")
 	}
 	return execute(), nil
 }
@@ -91,7 +92,7 @@ func GetPC() uint16 {
 
 // utility
 
-func getFlags() string {
+func GetFlags() string {
 	flagChar := "SZ5H3PNC"
 	flags := ""
 	mask := byte(0x80)
@@ -107,11 +108,11 @@ func getFlags() string {
 	return flags
 }
 
-func regAndMem(addr uint16) {
+func AddressAndMem(addr uint16) {
 	fmt.Printf("%04x(%02x) ", addr, (*memory).Get(addr))
 }
 
-func line(addr uint16) {
+func Line(addr uint16) {
 	fmt.Printf("%04x ", addr)
 	for i := uint16(0); i < 8; i++ {
 		fmt.Printf("%02x ", (*memory).Get(addr+i))
