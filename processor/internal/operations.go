@@ -82,21 +82,21 @@ func relativeJump() {
 func cc(y byte) bool {
 	switch y {
 	case 0x0: // NZ
-		return 0 == (reg.f & flagZ)
+		return (reg.f & flagZ) == 0
 	case 0x1: // Z
-		return 0 != (reg.f & flagZ)
+		return (reg.f & flagZ) != 0
 	case 0x2: // NC
-		return 0 == (reg.f & flagC)
+		return (reg.f & flagC) == 0
 	case 0x3: // C
-		return 0 != (reg.f & flagC)
+		return (reg.f & flagC) != 0
 	case 0x4: // PO
-		return 0 == (reg.f & flagPV)
+		return (reg.f & flagPV) == 0
 	case 0x5: // PE
-		return 0 != (reg.f & flagPV)
+		return (reg.f & flagPV) != 0
 	case 0x6: // P
-		return 0 == (reg.f & flagS)
+		return (reg.f & flagS) == 0
 	default: // M
-		return 0 != (reg.f & flagS)
+		return (reg.f & flagS) != 0
 	}
 }
 
@@ -293,10 +293,6 @@ func getRP2IXIY(p byte) uint16 {
 	default:
 		return getAF()
 	}
-}
-
-func make16(msb, lsb byte) uint16 {
-	return (uint16(msb) << 8) + uint16(lsb)
 }
 
 // get the +dd part of an index address

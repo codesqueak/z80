@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/codesqueak/z80/processor/pkg"
 	"github.com/codesqueak/z80/processor/pkg/hw"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
@@ -30,6 +31,11 @@ func TestInstructions(t *testing.T) {
 	mem.Put(addr, 0x76)
 	//
 	pkg.SetStartAddress(0x1000)
+	assert.Equal(t, uint16(0x1000), pkg.GetPC(), "Start address should have been set")
+	assert.Equal(t, "        ", pkg.GetFlags(), "All flags shoudl be reset")
+	pkg.AddressAndMem(0x0000)
+	pkg.Line(0x1000)
+	//
 	for halt := false; !halt; {
 		halt, err = pkg.RunOne()
 		if err != nil {

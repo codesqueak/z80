@@ -12,7 +12,6 @@ type Registers struct {
 	// internal
 	i, r           byte
 	iff1, iff2     bool
-	nmi_ff         bool
 	interruptMode  byte
 	ddMode, fdMode bool
 }

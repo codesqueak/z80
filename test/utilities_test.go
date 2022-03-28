@@ -2,6 +2,7 @@ package test
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/codesqueak/z80/processor/pkg/hw"
 	"log"
 	"os"
@@ -18,7 +19,7 @@ func loadFile(location string, mem *hw.Memory) {
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
-			// can't close file - bah!
+			fmt.Println("can't close file - bah!")
 		}
 	}(file)
 	var baseAddr uint16
