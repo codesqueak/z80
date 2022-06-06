@@ -24,6 +24,14 @@ func GetPC() uint16 {
 	return internal.GetPC()
 }
 
+func GetTStates() uint64 {
+	return internal.GetTStates()
+}
+
+func ResetTStates() {
+	internal.ResetTStates()
+}
+
 // GetFlags returns set flag values from SZ5H3PNC
 func GetFlags() string {
 	return internal.GetFlags()

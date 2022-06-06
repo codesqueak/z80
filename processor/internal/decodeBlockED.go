@@ -3,6 +3,7 @@ package internal
 // ED Prefixed Instructions
 func decodeED() {
 	inst := (*memory).Get(reg.pc)
+	reg.tStates = +opcodeEDTStates[inst]
 	reg.pc++
 	x, y, z := basicDecode(inst)
 	switch x {
@@ -244,6 +245,7 @@ func blockLD(y byte) {
 }
 
 func LDI() {
+	reg.tStates = +21
 	v := (*memory).Get(getHL())
 	(*memory).Put(getDE(), v)
 	setHL(getHL() + 1)
@@ -261,10 +263,13 @@ func LDIR() {
 	LDI()
 	if getBC() != 0 {
 		reg.pc = reg.pc - 2
+	} else {
+		reg.tStates = +16
 	}
 }
 
 func LDD() {
+	reg.tStates = +21
 	v := (*memory).Get(getHL())
 	(*memory).Put(getDE(), v)
 	setHL(getHL() - 1)
@@ -282,6 +287,8 @@ func LDDR() {
 	LDD()
 	if getBC() != 0 {
 		reg.pc = reg.pc - 2
+	} else {
+		reg.tStates = +16
 	}
 }
 
@@ -299,6 +306,7 @@ func blockCP(y byte) {
 }
 
 func CPI() {
+	reg.tStates = +21
 	v := (*memory).Get(getHL())
 	result := reg.a - v
 	setHL(getHL() + 1)
@@ -319,10 +327,13 @@ func CPIR() {
 	CPI()
 	if !getZ() && (getBC() != 0) {
 		reg.pc = reg.pc - 2
+	} else {
+		reg.tStates = +16
 	}
 }
 
 func CPD() {
+	reg.tStates = +21
 	v := (*memory).Get(getHL())
 	result := reg.a - v
 	setHL(getHL() - 1)
@@ -343,6 +354,8 @@ func CPDR() {
 	CPD()
 	if !getZ() && (getBC() != 0) {
 		reg.pc = reg.pc - 2
+	} else {
+		reg.tStates = +21
 	}
 }
 
@@ -360,6 +373,7 @@ func blockIN(y byte) {
 }
 
 func INI() {
+	reg.tStates = +21
 	(*memory).Put(getHL(), (*io).Get(reg.c))
 	reg.b--
 	setHL(getHL() + 1)
@@ -371,10 +385,13 @@ func INIR() {
 	INI()
 	if !getZ() {
 		reg.pc = reg.pc - 2
+	} else {
+		reg.tStates = +16
 	}
 }
 
 func IND() {
+	reg.tStates = +21
 	(*memory).Put(getHL(), (*io).Get(reg.c))
 	reg.b--
 	setHL(getHL() - 1)
@@ -386,6 +403,8 @@ func INDR() {
 	IND()
 	if !getZ() {
 		reg.pc = reg.pc - 2
+	} else {
+		reg.tStates = +21
 	}
 }
 

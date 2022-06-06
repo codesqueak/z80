@@ -12,6 +12,7 @@ func decodeDDFD(dd bool) {
 		reg.fdMode = true
 	}
 	inst := (*memory).Get(reg.pc)
+	reg.tStates = +opcodeDDFDStates[inst]
 	reg.pc++
 	x, y, z := basicDecode(inst)
 	switch x {

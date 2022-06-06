@@ -29,7 +29,10 @@ func decodeX3(y, z byte) {
 // RET cc[y]
 func ret(y byte) {
 	if cc(y) {
+		reg.tStates = +11
 		reg.pc = pop()
+	} else {
+		reg.tStates = +5
 	}
 }
 
@@ -72,6 +75,7 @@ func popRetExx(y byte) {
 // JP cc[y], nn
 func jpcc(y byte) {
 	if cc(y) {
+		reg.tStates = +10
 		reg.pc = load16FromPC()
 	} else {
 		reg.pc = reg.pc + 2
@@ -82,6 +86,7 @@ func jpcc(y byte) {
 func various3_3(y byte, io *hw.IO) {
 	switch y {
 	case 0: // JP nn
+		reg.tStates = +10
 		reg.pc = load16FromPC()
 	case 1: // (CB prefix)
 		decodeCB()
@@ -114,10 +119,12 @@ func various3_3(y byte, io *hw.IO) {
 // CALL cc[y], nn
 func callcc(y byte) {
 	if cc(y) {
+		reg.tStates = +17
 		addr := load16FromPC()
 		push(reg.pc)
 		reg.pc = addr
 	} else {
+		reg.tStates = +10
 		reg.pc = reg.pc + 2
 	}
 }
@@ -130,6 +137,7 @@ func various3_5(y byte) {
 	} else {
 		switch p {
 		case 0: // CALL nn
+			reg.tStates = +17
 			addr := load16FromPC()
 			push(reg.pc)
 			reg.pc = addr
