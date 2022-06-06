@@ -5,6 +5,7 @@ func decodeCBIXIY() {
 	addr := getIndex() + getIXIY()
 	reg.pc++
 	inst := (*memory).Get(reg.pc)
+	reg.tStates = +opcodIXCBTStates[inst]
 	reg.pc++
 	x, y, z := basicDecode(inst)
 	switch x {

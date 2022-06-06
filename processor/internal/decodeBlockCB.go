@@ -3,6 +3,7 @@ package internal
 // CB Prefixed Instructions
 func decodeCB() {
 	inst := (*memory).Get(reg.pc)
+	reg.tStates = +opcodeCBTStates[inst]
 	reg.pc++
 	x, y, z := basicDecode(inst)
 	switch x {

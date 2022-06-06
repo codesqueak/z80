@@ -14,4 +14,6 @@ type Registers struct {
 	iff1, iff2     bool
 	interruptMode  byte
 	ddMode, fdMode bool
+	//
+	tStates uint64
 }

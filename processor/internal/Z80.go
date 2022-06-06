@@ -39,26 +39,7 @@ func RunOne() (bool, error) {
 // return halt state
 func execute() bool {
 	inst := (*memory).Get(reg.pc)
-
-	//if count > 0x2643BC00 {
-	//	fmt.Printf("%06x ", count)
-	//	fmt.Printf("addr: %04x ", reg.pc)
-	//	fmt.Printf("inst: %02x ", inst)
-	//	fmt.Printf("A:%02x%02x ", reg.a, reg.f)
-	//	fmt.Printf("BC:")
-	//	regAndMem(getBC())
-	//	fmt.Printf("DE:")
-	//	regAndMem(getDE())
-	//	fmt.Printf("HL:")
-	//	regAndMem(getHL())
-	//	fmt.Printf("SP:")
-	//	fmt.Printf("%04x ", reg.sp)
-	//	fmt.Printf(" " + getFlags() + "\n")
-	//	//		line(0x2c80)
-	//}
-	//
-	//count++
-	//
+	reg.tStates += opcode8TStates[inst]
 	reg.pc++
 	if inst == 0x76 { // halt
 		return true
@@ -88,6 +69,14 @@ func SetStartAddress(addr uint16) {
 
 func GetPC() uint16 {
 	return reg.pc
+}
+
+func GetTStates() uint64 {
+	return reg.tStates
+}
+
+func ResetTStates() {
+	reg.tStates = 0
 }
 
 // utility

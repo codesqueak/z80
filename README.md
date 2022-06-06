@@ -10,12 +10,12 @@ Coffee!__ :coffee:](https://www.buymeacoffee.com/codesqueak) Thanks :thumbsup:
 
 ## How to use
 
-### go.mod
+### Get the library
 
 Add this:
 
 ```
-require github.com/codesqueak/z80 v0.6.0
+go get  github.com/codesqueak/z80@v1.1.0 
 ```
 
 ### In project code

@@ -36,17 +36,22 @@ func relativeJumps0(y byte) {
 	case 2: // djnz dd
 		reg.b--
 		if reg.b != 0 {
+			reg.tStates = +13
 			relativeJump()
 		} else {
+			reg.tStates = +8
 			reg.pc++
 		}
 		return
 	case 3: // jr dd
+		reg.tStates = +12
 		relativeJump()
 	default: // jr cc[y-4] dd
 		if cc(y - 4) {
+			reg.tStates = +12
 			relativeJump()
 		} else {
+			reg.tStates = +7
 			reg.pc++
 		}
 	}
