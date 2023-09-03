@@ -16,7 +16,7 @@ Coffee!__ :coffee:](https://www.buymeacoffee.com/codesqueak) Thanks :thumbsup:
 Add this:
 
 ```
-go get  github.com/codesqueak/z80@v1.1.0 
+go get  github.com/codesqueak/z80@v1.2.0 
 ```
 
 ### In project code
