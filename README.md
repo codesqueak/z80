@@ -4,7 +4,7 @@
 [![CodeQL](https://github.com/codesqueak/z80/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/codesqueak/z80/actions/workflows/codeql-analysis.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-This is an implementation of the Mostek / Zilog Z80 processor in Go
+This is an implementation of the Mostek / Zilog Z80 processor NMOS version in Go
 
 If you find this project useful, you may want to [__Buy me a
 Coffee!__ :coffee:](https://www.buymeacoffee.com/codesqueak) Thanks :thumbsup:
