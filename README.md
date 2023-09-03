@@ -1,6 +1,7 @@
 # Z80 Processor in Go / Golang
 
 [![build](https://github.com/codesqueak/z80/actions/workflows/build.yml/badge.svg)](https://github.com/codesqueak/z80/actions/workflows/build.yml)
+[![CodeQL](https://github.com/codesqueak/z80/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/codesqueak/z80/actions/workflows/codeql-analysis.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 This is an implementation of the Mostek / Zilog Z80 processor in Go
